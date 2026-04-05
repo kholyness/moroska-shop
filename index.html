@@ -10,16 +10,14 @@
             --main-color: #5d7a6d; 
             --hover-color: #4a6358;
             --bg-color: #fcfcfc; 
-            --text-color: #2c3e50;
         }
         
         body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background: var(--bg-color); margin: 0; color: var(--text-color);
-            padding-bottom: 100px; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg-color); margin: 0; padding-bottom: 100px; 
         }
 
-        /* Сетка */
+        /* Сетка товаров */
         .grid { 
             display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); 
             gap: 15px; padding: 15px; max-width: 1000px; margin: 0 auto;
@@ -28,92 +26,97 @@
         .card { 
             background: white; border-radius: 18px; overflow: hidden; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; 
-            transition: transform 0.2s, box-shadow 0.2s; position: relative;
+            transition: 0.2s; position: relative;
         }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .card-content { padding: 12px; }
         .card-title { font-size: 15px; font-weight: 600; margin-bottom: 5px; height: 40px; overflow: hidden; }
         .card-price { font-weight: bold; color: var(--main-color); font-size: 17px; }
 
-        /* Модалка */
+        /* Модальное окно */
         #productModal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: white; z-index: 1000; overflow-y: auto; 
         }
         .modal-container { max-width: 600px; margin: 0 auto; position: relative; }
         .modal-close { 
-            position: fixed; top: 20px; right: 20px; font-size: 40px; 
-            cursor: pointer; z-index: 1001; color: #888; line-height: 1;
+            position: fixed; top: 15px; right: 15px; font-size: 35px; 
+            cursor: pointer; z-index: 1001; color: rgba(0,0,0,0.5); background: rgba(255,255,255,0.8);
+            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
-        .modal-close:hover { color: #000; }
 
-        /* Карусель с навигацией */
-        .carousel-wrapper { position: relative; width: 100%; overflow: hidden; background: #eee; }
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        /* КАРУСЕЛЬ (Исправлено) */
+        .carousel-wrapper { position: relative; width: 100%; background: #f0f0f0; line-height: 0; }
+        .carousel { 
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory; 
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+        }
         .carousel::-webkit-scrollbar { display: none; }
-        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 500px; object-fit: cover; }
+        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 550px; object-fit: cover; }
         
+        /* Стрелки */
         .carousel-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px;
-            border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.9); border: none; width: 44px; height: 44px;
+            border-radius: 50%; cursor: pointer; font-size: 24px; z-index: 10; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: var(--main-color);
+            transition: 0.2s;
         }
-        .carousel-btn:hover { background: white; }
-        .btn-prev { left: 10px; }
-        .btn-next { right: 10px; }
+        .carousel-btn:hover { background: white; transform: translateY(-50%) scale(1.1); }
+        .btn-prev { left: 15px; }
+        .btn-next { right: 15px; }
 
+        /* Точки */
         .carousel-dots { 
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 8px; z-index: 10; 
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 10px; z-index: 10; padding: 5px 10px; background: rgba(0,0,0,0.1); border-radius: 20px;
         }
-        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; cursor: pointer; }
-        .dot.active { background: white; width: 20px; border-radius: 10px; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.6); border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); }
+        .dot.active { background: white; width: 18px; border-radius: 10px; }
 
         .modal-info { padding: 25px; }
         .btn-action { 
             background: var(--main-color); color: white; border: none; 
-            width: 100%; padding: 18px; border-radius: 12px; 
+            width: 100%; padding: 20px; border-radius: 14px; 
             font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
-        .btn-action:hover { background: var(--hover-color); transform: scale(1.02); }
+        .btn-action:hover { background: var(--hover-color); }
 
-        /* Нижнее меню */
+        /* Навигация (Курсор исправлен) */
         .nav { 
             position: fixed; bottom: 0; width: 100%; background: white; 
-            display: flex; border-top: 1px solid #eee; height: 80px; align-items: center; z-index: 999;
+            display: flex; border-top: 1px solid #eee; height: 85px; align-items: center; z-index: 999;
         }
         .nav-item { 
-            flex: 1; text-align: center; font-size: 14px; color: #999; 
-            cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: 500;
+            flex: 1; text-align: center; font-size: 14px; color: #aaa; 
+            cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: 600;
         }
         .nav-item:hover { color: var(--main-color); }
         .nav-item.active { color: var(--main-color); font-weight: 800; }
 
         #successScreen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 2000; text-align: center; padding-top: 100px;
+            background: white; z-index: 2000; text-align: center; padding-top: 120px;
         }
-
-        /* Скрыть стрелки на тач-устройствах для чистоты */
-        @media (pointer: coarse) { .carousel-btn { display: none; } }
     </style>
 </head>
 <body>
 
-<div id="loading" style="text-align:center; padding: 100px;">Загружаем Moroska...</div>
+<div id="loading" style="text-align:center; padding-top: 100px;">Загружаем Moroska...</div>
 <div id="app" class="grid"></div>
 
 <div id="productModal">
-    <span class="modal-close" onclick="closeModal()">×</span>
+    <div class="modal-close" onclick="closeModal()">✕</div>
     <div class="modal-container" id="modalContent"></div>
 </div>
 
 <div id="successScreen">
-    <h1>🍓 Спасибо!</h1>
-    <p>Ваш запрос отправлен мастеру Moroska.</p>
-    <button class="btn-action" style="width: 80%;" onclick="window.open('https://t.me/kholyness')">Написать мастеру в ЛС</button>
-    <p style="margin-top: 20px; color: #888; cursor:pointer" onclick="location.reload()">Вернуться в магазин</p>
+    <h1>🍓 Готово!</h1>
+    <p>Мастер уже получил ваш запрос.</p>
+    <button class="btn-action" style="width: 80%; margin: 20px auto; display: block;" onclick="window.open('https://t.me/kholyness')">Написать мастеру</button>
+    <p style="color: #888; cursor:pointer; padding: 10px;" onclick="location.reload()">← Назад в магазин</p>
 </div>
 
 <div class="nav">
@@ -126,6 +129,7 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
     
+    // ВСТАВЬ СВОЙ URL НИЖЕ
     const API_URL = "https://script.google.com/macros/s/AKfycbxNIs7VC7os0DrrNbufwsKYr0jSBLw9OE0tWCIhwl2APMVWk8f9mebtgTiGkyFE2tY5ng/exec"; 
     let currentData = {};
     let currentTab = 'Stock';
@@ -143,7 +147,7 @@
         const app = document.getElementById('app');
         app.innerHTML = items.map((item, index) => `
             <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                <img src="${item.Фото.split(',')[0].trim()}" alt="">
+                <img src="${item.Фото.split(',')[0].trim()}">
                 <div class="card-content">
                     <div class="card-title">${item.Название}</div>
                     <div class="card-price">${item.Цена} RUB</div>
@@ -158,24 +162,27 @@
         const content = document.getElementById('modalContent');
         const photos = item.Фото.split(',').map(url => url.trim());
         
-        // Логика текста кнопки
         const btnText = (tab === 'Stock') ? 'КУПИТЬ' : 'ЗАКАЗАТЬ';
         
         content.innerHTML = `
             <div class="carousel-wrapper">
-                ${photos.length > 1 ? `<button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">‹</button>` : ''}
+                ${photos.length > 1 ? `
+                    <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">❮</button>
+                    <button class="carousel-btn btn-next" onclick="moveCarousel(1)">❯</button>
+                ` : ''}
                 <div class="carousel" id="mainCarousel" onscroll="updateDots()">
                     ${photos.map(p => `<img src="${p}">`).join('')}
                 </div>
-                ${photos.length > 1 ? `<button class="carousel-btn btn-next" onclick="moveCarousel(1)">›</button>` : ''}
-                <div class="carousel-dots" id="dots">
-                    ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="scrollToImage(${i})"></div>`).join('')}
-                </div>
+                ${photos.length > 1 ? `
+                    <div class="carousel-dots" id="dots">
+                        ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="scrollToImg(${i})"></div>`).join('')}
+                    </div>
+                ` : ''}
             </div>
             <div class="modal-info">
                 <h2>${item.Название}</h2>
-                <div style="font-size: 22px; font-weight: bold; color:var(--main-color); margin-bottom: 15px;">${item.Цена} RUB</div>
-                <p style="line-height: 1.6; color: #555; white-space: pre-wrap;">${item.Описание}</p>
+                <div style="font-size: 24px; font-weight: 800; color:var(--main-color); margin-bottom: 20px;">${item.Цена} RUB</div>
+                <div style="line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 30px; font-size: 16px;">${item.Описание}</div>
                 <button class="btn-action" onclick="sendOrder('${item.Название}', '${item.Цена}', '${tab}')">${btnText}</button>
             </div>
         `;
@@ -183,16 +190,16 @@
         document.body.style.overflow = 'hidden';
     }
 
-    // Функции карусели
-    function moveCarousel(dir) {
+    // Карусель
+    window.moveCarousel = function(dir) {
         const c = document.getElementById('mainCarousel');
-        c.scrollLeft += dir * c.offsetWidth;
+        c.scrollBy({ left: dir * c.offsetWidth, behavior: 'smooth' });
     }
-    function scrollToImage(idx) {
+    window.scrollToImg = function(idx) {
         const c = document.getElementById('mainCarousel');
-        c.scrollLeft = idx * c.offsetWidth;
+        c.scrollTo({ left: idx * c.offsetWidth, behavior: 'smooth' });
     }
-    function updateDots() {
+    window.updateDots = function() {
         const c = document.getElementById('mainCarousel');
         const idx = Math.round(c.scrollLeft / c.offsetWidth);
         const dots = document.querySelectorAll('.dot');
