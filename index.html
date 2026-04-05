@@ -2,87 +2,53 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Moroska Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { 
-            --main-color: #5d7a6d; 
-            --hover-color: #4a6358;
-            --bg-color: #fcfcfc; 
-            --sale-color: #e74c3c;
-        }
+        :root { --main-color: #5d7a6d; --bg-color: #fcfcfc; --sale-color: #e74c3c; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; position: relative; display: flex; flex-direction: column; }
+        .card:active { transform: scale(0.98); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; pointer-events: none; }
         
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
-
-        /* Сетка товаров: минимум 2 в ряд, на ПК больше */
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-            gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; 
-        }
-
-        .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; position: relative; display: flex; flex-direction: column; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        
-        /* Плашка скидки */
-        .sale-badge { 
-            position: absolute; top: 10px; left: 10px; background: var(--sale-color); 
-            color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; z-index: 5;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
+        .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; z-index: 5; }
         .card-content { padding: 12px; flex-grow: 1; }
         .card-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; height: 38px; overflow: hidden; line-height: 1.3; color: #333; }
-        .card-price { font-weight: bold; color: var(--main-color); font-size: 15px; }
-        .old-price-card { text-decoration: line-through; color: #aaa; font-size: 11px; margin-right: 6px; font-weight: normal; }
+        .card-price { font-weight: bold; color: var(--main-color); font-size: 16px; }
+        .old-price-card { text-decoration: line-through; color: #aaa; font-size: 12px; margin-right: 6px; }
 
-        /* Модалка */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
-        .modal-container { max-width: 600px; margin: 0 auto; position: relative; }
-        .modal-close { position: fixed; top: 15px; right: 15px; font-size: 24px; cursor: pointer; z-index: 1001; color: #333; background: rgba(255,255,255,0.7); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-container { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
+        .modal-close { position: fixed; top: 15px; right: 15px; font-size: 24px; cursor: pointer; z-index: 1001; color: #333; background: rgba(255,255,255,0.8); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
 
-        /* Карусель */
-        .carousel-wrapper { position: relative; width: 100%; background: #f9f9f9; line-height: 0; overflow: hidden; }
+        .carousel-wrapper { position: relative; width: 100%; background: #f9f9f9; overflow: hidden; }
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
         .carousel::-webkit-scrollbar { display: none; }
-        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 550px; object-fit: cover; }
+        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 500px; object-fit: cover; }
         
-        .carousel-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.2); border: none; width: 42px; height: 42px;
-            border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10; 
-            display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.3);
-            transition: 0.2s;
-        }
-        .carousel-btn:hover { background: rgba(255,255,255,0.8); color: #000; }
-        .btn-prev { left: 10px; }
-        .btn-next { right: 10px; }
-
-        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
-        .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+        .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.4); border-radius: 50%; }
         .dot.active { background: white; width: 14px; border-radius: 8px; }
 
-        .modal-info { padding: 25px; }
+        .modal-info { padding: 20px; }
         .modal-price-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 15px; }
-        .modal-old-price { text-decoration: line-through; color: #aaa; font-size: 18px; }
-        .modal-current-price { font-size: 26px; font-weight: 800; color: var(--main-color); }
-
-        .btn-action { background: var(--main-color); color: white; border: none; width: 100%; padding: 18px; border-radius: 14px; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-action:hover { background: var(--hover-color); transform: scale(1.02); }
-
-        /* Навигация */
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 75px; align-items: center; z-index: 999; }
-        .nav-item { flex: 1; text-align: center; font-size: 13px; color: #bbb; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: 600; }
+        .modal-current-price { font-size: 24px; font-weight: 800; color: var(--main-color); }
+        
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 75px; align-items: center; z-index: 999; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; font-size: 12px; color: #bbb; cursor: pointer; text-transform: uppercase; font-weight: 600; }
         .nav-item.active { color: var(--main-color); font-weight: 800; }
 
+        #error-msg { display: none; text-align: center; padding: 50px; color: #e74c3c; }
         #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 120px; }
     </style>
 </head>
 <body>
 
-<div id="loading" style="text-align:center; padding-top: 100px;">Učitavanje...</div>
+<div id="loading" style="text-align:center; padding-top: 100px;">Učitavanje Moroska...</div>
+<div id="error-msg">Ошибка загрузки. Проверьте интернет.</div>
 <div id="app" class="grid"></div>
 
 <div id="productModal">
@@ -92,9 +58,9 @@
 
 <div id="successScreen">
     <h1>Готово!</h1>
-    <p>Мастер уже получил ваш запрос.</p>
-    <button class="btn-action" style="width: 80%; margin: 20px auto; display: block;" onclick="window.open('https://t.me/kholyness')">Написать мастеру</button>
-    <p style="color: #888; cursor:pointer; padding: 10px;" onclick="location.reload()">← Вернуться в магазин</p>
+    <p>Заказ передан мастеру.</p>
+    <button onclick="window.open('https://t.me/kholyness')" style="background:var(--main-color); color:white; border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">Написать в ЛС</button>
+    <p onclick="location.reload()" style="color:#888; margin-top:20px; cursor:pointer;">← Назад</p>
 </div>
 
 <div class="nav">
@@ -104,45 +70,64 @@
 </div>
 
 <script>
-    let tg = window.Telegram.WebApp;
+    const tg = window.Telegram.WebApp;
+    tg.ready();
     tg.expand();
-    
-    // ВСТАВЬ ТУТ СВОЮ ССЫЛКУ ИЗ GOOGLE SCRIPTS
-    const API_URL = "https://script.google.com/macros/s/AKfycbzql0xdFpheyvXVaiWFARTAD8uUJaomTqeSzb6XyVYljyhPbSC-Q61C_wB7xI8hY-LURw/exec"; 
 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzql0xdFpheyvXVaiWFARTAD8uUJaomTqeSzb6XyVYljyhPbSC-Q61C_wB7xI8hY-LURw/exec"; 
     let currentData = {};
-    let currentTab = 'Stock';
-    let currentPhotoIdx = 0;
-    let photoCount = 0;
+    let activeItem = null;
+
+    // XSS Protection
+    function esc(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Нормализация данных (убираем пробелы и подчеркивания в ключах)
+    function normalize(obj) {
+        let newObj = {};
+        for (let key in obj) {
+            let newKey = key.trim().replace(/\s+/g, '_');
+            newObj[newKey] = obj[key];
+        }
+        return newObj;
+    }
 
     async function init() {
         try {
             const res = await fetch(API_URL);
-            currentData = await res.json();
+            if (!res.ok) throw new Error();
+            const rawData = await res.json();
+            
+            for (let tab in rawData) {
+                currentData[tab] = rawData[tab].map(normalize);
+            }
+            
             document.getElementById('loading').style.display = 'none';
             render(currentData.Stock);
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-msg').style.display = 'block';
+        }
     }
 
     function render(items) {
         const app = document.getElementById('app');
         app.innerHTML = items.map((item, index) => {
-            const sale = item.Скидка || item['Скидка'] || "";
-            const oldPrice = item.Старая_цена || item['Старая_цена'] || item['Старая цена'] || "";
-            const photo = item.Фото || item['Фото'] || "";
-            const title = item.Название || item['Название'] || "";
-            const price = item.Цена || item['Цена'] || "";
-            const hasSale = sale.toString().trim() !== "";
-            
+            const sale = esc(item.Скидка);
+            const oldPrice = esc(item.Старая_цена);
             return `
-                <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${hasSale ? `<div class="sale-badge">${sale}</div>` : ''}
-                    <img src="${photo.split(',')[0].trim()}">
+                <div class="card" onclick="openProduct(currentTab, ${index})">
+                    ${sale ? `<div class="sale-badge">${sale}</div>` : ''}
+                    <img src="${esc(item.Фото.split(',')[0])}" loading="lazy">
                     <div class="card-content">
-                        <div class="card-title">${title}</div>
+                        <div class="card-title">${esc(item.Название)}</div>
                         <div class="card-price">
                             ${oldPrice ? `<span class="old-price-card">${oldPrice}</span>` : ''}
-                            ${price} RSD
+                            ${esc(item.Цена)} RSD
                         </div>
                     </div>
                 </div>
@@ -151,56 +136,67 @@
     }
 
     function openProduct(tab, index) {
-        const item = currentData[tab][index];
+        activeItem = currentData[tab][index];
+        tg.HapticFeedback.impactOccurred('light');
+        
         const modal = document.getElementById('productModal');
         const content = document.getElementById('modalContent');
-        
-        const photoPath = item.Фото || item['Фото'] || "";
-        const photos = photoPath.split(',').map(url => url.trim());
-        const title = item.Название || item['Название'] || "";
-        const price = item.Цена || item['Цена'] || "";
-        const oldPrice = item.Старая_цена || item['Старая_цена'] || item['Старая цена'] || "";
-        const sale = item.Скидка || item['Скидка'] || "";
-        const desc = item.Описание || item['Описание'] || "";
-        
-        photoCount = photos.length;
-        currentPhotoIdx = 0;
-        
-        const btnText = (tab === 'Stock') ? 'КУПИТЬ' : 'ЗАКАЗАТЬ';
-        const hasSale = sale.toString().trim() !== "";
+        const photos = activeItem.Фото.split(',').map(url => url.trim());
         
         content.innerHTML = `
             <div class="carousel-wrapper">
-                ${hasSale ? `<div class="sale-badge" style="top: 15px; left: 15px; font-size: 13px; padding: 5px 12px;">${sale}</div>` : ''}
-                ${photoCount > 1 ? `
-                    <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">❮</button>
-                    <button class="carousel-btn btn-next" onclick="moveCarousel(1)">❯</button>
-                ` : ''}
                 <div class="carousel" id="mainCarousel" onscroll="syncDots()">
-                    ${photos.map(p => `<img src="${p}">`).join('')}
+                    ${photos.map(p => `<img src="${esc(p)}">`).join('')}
                 </div>
-                ${photoCount > 1 ? `<div class="carousel-dots">${photos.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
+                <div class="carousel-dots" id="dots">
+                    ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('')}
+                </div>
             </div>
             <div class="modal-info">
-                <h2 style="margin-top:0">${title}</h2>
+                <h2>${esc(activeItem.Название)}</h2>
                 <div class="modal-price-row">
-                    ${oldPrice ? `<div class="modal-old-price">${oldPrice} RSD</div>` : ''}
-                    <div class="modal-current-price">${price} RSD</div>
+                    ${activeItem.Старая_цена ? `<span style="text-decoration:line-through; color:#aaa;">${esc(activeItem.Старая_цена)} RSD</span>` : ''}
+                    <span class="modal-current-price">${esc(activeItem.Цена)} RSD</span>
                 </div>
-                <div style="line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 30px; font-size: 15px;">${desc}</div>
-                <button class="btn-action" onclick="sendOrder('${title}', '${price}', '${tab}')">${btnText}</button>
+                <div style="line-height: 1.6; white-space: pre-wrap;">${esc(activeItem.Описание)}</div>
             </div>
         `;
+
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
+
+        // Нативная кнопка Telegram
+        tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ');
+        tg.MainButton.show();
+        tg.MainButton.offClick(handleOrder); // Сброс старых кликов
+        tg.MainButton.onClick(handleOrder);
     }
 
-    window.moveCarousel = function(dir) {
-        const c = document.getElementById('mainCarousel');
-        currentPhotoIdx += dir;
-        if (currentPhotoIdx >= photoCount) currentPhotoIdx = 0;
-        if (currentPhotoIdx < 0) currentPhotoIdx = photoCount - 1;
-        c.scrollTo({ left: currentPhotoIdx * c.offsetWidth, behavior: 'smooth' });
+    async function handleOrder() {
+        tg.MainButton.showProgress();
+        const type = (currentTab === 'Stock') ? 'Iz zaliha' : 'Po porudžbini';
+        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest', username: 'none'};
+        
+        const orderData = {
+            action: "order",
+            item: activeItem.Название,
+            price: activeItem.Цена,
+            type: type,
+            user_id: user.id,
+            user_name: user.first_name,
+            user_username: user.username
+        };
+
+        try {
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify(orderData) });
+            tg.HapticFeedback.notificationOccurred('success');
+            document.getElementById('successScreen').style.display = 'block';
+            tg.MainButton.hide();
+        } catch(e) {
+            tg.showAlert("Ошибка при оформлении заказа.");
+        } finally {
+            tg.MainButton.hideProgress();
+        }
     }
 
     window.syncDots = function() {
@@ -208,24 +204,20 @@
         const idx = Math.round(c.scrollLeft / (c.offsetWidth || 1));
         const dots = document.querySelectorAll('.dot');
         dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-        currentPhotoIdx = idx;
     }
 
-    function closeModal() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
+    window.closeModal = function() {
+        document.getElementById('productModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        tg.MainButton.hide();
+    }
 
-    function changeTab(tab, el) {
+    window.changeTab = function(tab, el) {
         currentTab = tab;
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
         render(currentData[tab]);
         window.scrollTo(0,0);
-    }
-
-    async function sendOrder(name, price, tab) {
-        const type = (tab === 'Stock') ? 'Iz zaliha' : 'Po porudžbini';
-        const user = tg.initDataUnsafe.user || {id: 'test', first_name: 'User', username: 'kholyness'};
-        document.getElementById('successScreen').style.display = 'block';
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "order", item: name, price: price, type: type, user_id: user.id, user_name: user.first_name, user_username: user.username }) });
     }
 
     init();
