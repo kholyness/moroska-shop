@@ -127,7 +127,7 @@
             
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${hasSale ? `<div class="sale-badge">-${sale}</div>` : ''}
+                    ${hasSale ? `<div class="sale-badge">${sale}</div>` : ''}
                     <img src="${(item.Фото || item['Фото']).split(',')[0].trim()}">
                     <div class="card-content">
                         <div class="card-title">${item.Название || item['Название']}</div>
