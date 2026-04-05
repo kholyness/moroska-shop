@@ -1,18 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Moroska Shop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
+        :root { --main-color: #7a9a8c; --bg-color: #f0f2f5; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+               background: var(--bg-color); margin: 0; padding: 0; color: #333; padding-bottom: 80px; }
+        
+        /* Сетка товаров (2 в ряд) */
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        
+        .card { background: white; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; 
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        
+        .card-info { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .title { font-size: 14px; margin-bottom: 8px; color: #444; height: 34px; overflow: hidden; }
+        
+        .price-row { display: flex; flex-direction: column; gap: 4px; }
+        .old-price { font-size: 12px; text-decoration: line-through; color: #999; }
+        .price { font-weight: bold; font-size: 15px; background: #eee; padding: 6px; border-radius: 6px; text-align: center; }
+        .sale-badge { position: absolute; top: 8px; left: 8px; background: #e74c3c; color: white; 
+                      padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+
+        /* Нижнее меню */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; 
+               justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; z-index: 100; }
+        .nav-item { text-align: center; font-size: 11px; color: #888; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--main-color); font-weight: bold; }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+        #loading { text-align: center; padding: 50px; font-size: 14px; color: #888; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>🍓 Moroska Web App</h1>
-        <p>Витрина в процессе сборки!</p>
+
+    <div id="loading">Загружаем Moroska...</div>
+    <div id="app" class="container" style="display:none;"></div>
+
+    <div class="nav">
+        <div class="nav-item active" onclick="loadTab('Stock', this)">
+            <span class="nav-icon">📦</span>Наличие
+        </div>
+        <div class="nav-item" onclick="loadTab('Catalog', this)">
+            <span class="nav-icon">🧵</span>Модели
+        </div>
+        <div class="nav-item" onclick="loadTab('Fabrics', this)">
+            <span class="nav-icon">🎨</span>Ткани
+        </div>
     </div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // ВАЖНО: Сюда вставьте ссылку из Google Apps Script (Шаг 1 из прошлого сообщения)
+    const API_URL = "https://script.google.com/macros/s/AKfycbyCiAK9mu9TV8MYognQvZUuOrIs_diQ4QkoH05ytzQ7UPYJD6rMedasyoIHaNkgLbHC/exec"; 
+
+    let allData = {};
+
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            allData = await response.json();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'grid';
+            renderItems(allData.Stock);
+        } catch (e) {
+            document.getElementById('loading').innerText = "Ошибка загрузки данных :(";
+        }
+    }
+
+    function renderItems(items) {
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        items.forEach(item => {
+            const hasSale = item['Скидка'] && item['Скидка'] !== "";
+            app.innerHTML += `
+                <div class="card" onclick="openProduct('${item['Название']}')">
+                    ${hasSale ? `<div class="sale-badge">${item['Скидка']}</div>` : ''}
+                    <img src="${item['Фото'] || 'https://via.placeholder.com/150'}" alt="">
+                    <div class="card-info">
+                        <div class="title">${item['Название']}</div>
+                        <div class="price-row">
+                            ${hasSale ? `<div class="old-price">${item['Старая цена']}</div>` : ''}
+                            <div class="price">🛒 ${item['Цена']} RUB</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function loadTab(tabName, el) {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        renderItems(allData[tabName]);
+    }
+
+    function openProduct(name) {
+        tg.sendData(JSON.stringify({action: "buy", item: name}));
+        tg.showAlert("Вы выбрали: " + name + ". В полной версии здесь откроется описание!");
+    }
+
+    fetchData();
+</script>
 </body>
 </html>
