@@ -120,20 +120,24 @@
     function render(items) {
         const app = document.getElementById('app');
         app.innerHTML = items.map((item, index) => {
-            // Умный поиск полей (на случай если есть пробелы или разный регистр)
+            // Умный поиск полей
             const sale = item.Скидка || item['Скидка'] || "";
             const oldPrice = item.Старая_цена || item['Старая цена'] || "";
+            const photoPath = item.Фото || item['Фото'] || "";
+            const title = item.Название || item['Название'] || "";
+            const price = item.Цена || item['Цена'] || "";
+
             const hasSale = sale.toString().trim() !== "";
             
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
                     ${hasSale ? `<div class="sale-badge">${sale}</div>` : ''}
-                    <img src="${(item.Фото || item['Фото']).split(',')[0].trim()}">
+                    <img src="${photoPath.split(',')[0].trim()}">
                     <div class="card-content">
-                        <div class="card-title">${item.Название || item['Название']}</div>
+                        <div class="card-title">${title}</div>
                         <div class="card-price">
                             ${oldPrice ? `<span class="old-price-card">${oldPrice}</span>` : ''}
-                            ${item.Цена || item['Цена']} RSD
+                            ${price} RSD
                         </div>
                     </div>
                 </div>
