@@ -12,94 +12,59 @@
             --bg-color: #fcfcfc; 
         }
         
-        body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
-            background: var(--bg-color); margin: 0; padding-bottom: 100px; 
-        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
 
         /* Сетка товаров */
-        .grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); 
-            gap: 15px; padding: 15px; max-width: 1000px; margin: 0 auto;
-        }
-
-        .card { 
-            background: white; border-radius: 18px; overflow: hidden; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; 
-            transition: 0.2s; position: relative;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; padding: 15px; max-width: 1000px; margin: 0 auto; }
+        .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; position: relative; }
         .card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .card-content { padding: 12px; }
         .card-title { font-size: 15px; font-weight: 600; margin-bottom: 5px; height: 40px; overflow: hidden; }
         .card-price { font-weight: bold; color: var(--main-color); font-size: 17px; }
 
-        /* Модальное окно */
-        #productModal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: white; z-index: 1000; overflow-y: auto; 
-        }
+        /* Модалка */
+        #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
         .modal-container { max-width: 600px; margin: 0 auto; position: relative; }
-        .modal-close { 
-            position: fixed; top: 15px; right: 15px; font-size: 35px; 
-            cursor: pointer; z-index: 1001; color: rgba(0,0,0,0.5); background: rgba(255,255,255,0.8);
-            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        }
+        .modal-close { position: fixed; top: 15px; right: 15px; font-size: 28px; cursor: pointer; z-index: 1001; color: #333; background: rgba(255,255,255,0.9); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-        /* КАРУСЕЛЬ (Исправлено) */
+        /* Карусель */
         .carousel-wrapper { position: relative; width: 100%; background: #f0f0f0; line-height: 0; }
-        .carousel { 
-            display: flex; overflow-x: auto; scroll-snap-type: x mandatory; 
-            scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
-        }
+        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 550px; object-fit: cover; }
         
-        /* Стрелки */
+        /* Кнопки навигации карусели */
         .carousel-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.9); border: none; width: 44px; height: 44px;
-            border-radius: 50%; cursor: pointer; font-size: 24px; z-index: 10; 
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); color: var(--main-color);
-            transition: 0.2s;
+            background: rgba(255,255,255,0.8); border: none; width: 40px; height: 40px;
+            border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10; 
+            display: flex; align-items: center; justify-content: center; color: #333;
+            transition: 0.2s; opacity: 1;
         }
-        .carousel-btn:hover { background: white; transform: translateY(-50%) scale(1.1); }
-        .btn-prev { left: 15px; }
-        .btn-next { right: 15px; }
+        .btn-prev { left: 10px; }
+        .btn-next { right: 10px; }
+        
+        /* Прозрачность для мобильных устройств */
+        @media (pointer: coarse) {
+            .carousel-btn { background: rgba(255,255,255,0.3); color: rgba(0,0,0,0.4); width: 35px; height: 35px; }
+        }
+        .carousel-btn:hover { background: white; opacity: 1; scale: 1.05; }
 
-        /* Точки */
-        .carousel-dots { 
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-            display: flex; gap: 10px; z-index: 10; padding: 5px 10px; background: rgba(0,0,0,0.1); border-radius: 20px;
-        }
-        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.6); border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); }
-        .dot.active { background: white; width: 18px; border-radius: 10px; }
+        .carousel-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
+        .dot { width: 7px; height: 7px; background: rgba(255,255,255,0.5); border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
+        .dot.active { background: white; width: 16px; border-radius: 8px; }
 
         .modal-info { padding: 25px; }
-        .btn-action { 
-            background: var(--main-color); color: white; border: none; 
-            width: 100%; padding: 20px; border-radius: 14px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
+        .btn-action { background: var(--main-color); color: white; border: none; width: 100%; padding: 18px; border-radius: 14px; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-action:hover { background: var(--hover-color); }
 
-        /* Навигация (Курсор исправлен) */
-        .nav { 
-            position: fixed; bottom: 0; width: 100%; background: white; 
-            display: flex; border-top: 1px solid #eee; height: 85px; align-items: center; z-index: 999;
-        }
-        .nav-item { 
-            flex: 1; text-align: center; font-size: 14px; color: #aaa; 
-            cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: 600;
-        }
-        .nav-item:hover { color: var(--main-color); }
+        /* Навигация */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 80px; align-items: center; z-index: 999; }
+        .nav-item { flex: 1; text-align: center; font-size: 14px; color: #aaa; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: 600; }
         .nav-item.active { color: var(--main-color); font-weight: 800; }
 
-        #successScreen {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 2000; text-align: center; padding-top: 120px;
-        }
+        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 120px; }
     </style>
 </head>
 <body>
@@ -113,10 +78,10 @@
 </div>
 
 <div id="successScreen">
-    <h1>🍓 Готово!</h1>
+    <h1>Готово!</h1>
     <p>Мастер уже получил ваш запрос.</p>
     <button class="btn-action" style="width: 80%; margin: 20px auto; display: block;" onclick="window.open('https://t.me/kholyness')">Написать мастеру</button>
-    <p style="color: #888; cursor:pointer; padding: 10px;" onclick="location.reload()">← Назад в магазин</p>
+    <p style="color: #888; cursor:pointer; padding: 10px;" onclick="location.reload()">Вернуться в магазин</p>
 </div>
 
 <div class="nav">
@@ -129,8 +94,7 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
     
-    // ВСТАВЬ СВОЙ URL НИЖЕ
-    const API_URL = "https://script.google.com/macros/s/AKfycbxNIs7VC7os0DrrNbufwsKYr0jSBLw9OE0tWCIhwl2APMVWk8f9mebtgTiGkyFE2tY5ng/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyb5zROWew1noX_UyERI_98PaOMXzBNZ3U4Lnk2GXYCteEqSIl0-uxZlw6XUGQ1pT2U2Q/exec"; 
     let currentData = {};
     let currentTab = 'Stock';
 
@@ -161,7 +125,6 @@
         const modal = document.getElementById('productModal');
         const content = document.getElementById('modalContent');
         const photos = item.Фото.split(',').map(url => url.trim());
-        
         const btnText = (tab === 'Stock') ? 'КУПИТЬ' : 'ЗАКАЗАТЬ';
         
         content.innerHTML = `
@@ -174,7 +137,7 @@
                     ${photos.map(p => `<img src="${p}">`).join('')}
                 </div>
                 ${photos.length > 1 ? `
-                    <div class="carousel-dots" id="dots">
+                    <div class="carousel-dots">
                         ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="scrollToImg(${i})"></div>`).join('')}
                     </div>
                 ` : ''}
@@ -182,7 +145,7 @@
             <div class="modal-info">
                 <h2>${item.Название}</h2>
                 <div style="font-size: 24px; font-weight: 800; color:var(--main-color); margin-bottom: 20px;">${item.Цена} RUB</div>
-                <div style="line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 30px; font-size: 16px;">${item.Описание}</div>
+                <div style="line-height: 1.6; color: #444; white-space: pre-wrap; margin-bottom: 30px;">${item.Описание}</div>
                 <button class="btn-action" onclick="sendOrder('${item.Название}', '${item.Цена}', '${tab}')">${btnText}</button>
             </div>
         `;
@@ -190,7 +153,6 @@
         document.body.style.overflow = 'hidden';
     }
 
-    // Карусель
     window.moveCarousel = function(dir) {
         const c = document.getElementById('mainCarousel');
         c.scrollBy({ left: dir * c.offsetWidth, behavior: 'smooth' });
@@ -201,15 +163,12 @@
     }
     window.updateDots = function() {
         const c = document.getElementById('mainCarousel');
-        const idx = Math.round(c.scrollLeft / c.offsetWidth);
+        const idx = Math.round(c.scrollLeft / (c.offsetWidth || 1));
         const dots = document.querySelectorAll('.dot');
         dots.forEach((d, i) => d.classList.toggle('active', i === idx));
     }
 
-    function closeModal() { 
-        document.getElementById('productModal').style.display = 'none'; 
-        document.body.style.overflow = 'auto';
-    }
+    function closeModal() { document.getElementById('productModal').style.display = 'none'; document.body.style.overflow = 'auto'; }
 
     function changeTab(tab, el) {
         currentTab = tab;
@@ -221,17 +180,9 @@
 
     async function sendOrder(name, price, tab) {
         const type = (tab === 'Stock') ? 'Из наличия' : 'Под заказ';
-        const user = tg.initDataUnsafe.user || {id: '266696995', first_name: 'Admin', username: 'kholyness'};
-        
+        const user = tg.initDataUnsafe.user || {id: '266696995', first_name: 'User', username: 'kholyness'};
         document.getElementById('successScreen').style.display = 'block';
-        
-        await fetch(API_URL, { 
-            method: 'POST', 
-            body: JSON.stringify({
-                action: "order", item: name, price: price, type: type,
-                user_id: user.id, user_name: user.first_name, user_username: user.username
-            }) 
-        });
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: "order", item: name, price: price, type: type, user_id: user.id, user_name: user.first_name, user_username: user.username }) });
     }
 
     init();
