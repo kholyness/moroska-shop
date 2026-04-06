@@ -79,7 +79,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbzIVC1GpSSdz8M8oSbZuh9LTrpOESE6dhGdVGnzlL7FHLpp7OBYVZQXcDMuWhEd7DAr6w/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyNiX1RXX6BZU1lhYL7o4tYsjy1Bu_xAlv42Lbqtd1jptFwxRvG38kzms1HC66DFh_B-Q/exec"; 
 
     let currentData = {};
     let currentTab = 'Stock';
@@ -144,7 +144,8 @@
 
     tg.MainButton.onClick(async () => {
         tg.MainButton.showProgress();
-        const user = tg.initDataUnsafe.user || {username: 'guest'};
+        const user = tg.initDataUnsafe.user || {id: '—', first_name: 'Guest', username: 'none'};
+        
         try {
             await fetch(API_URL, {
                 method: 'POST',
@@ -154,12 +155,18 @@
                     sku: activeItem.Артикул || activeItem.Артикул_ткани || "—",
                     price: activeItem.Цена || 0,
                     type: currentTab,
-                    user: user.username
+                    user_id: user.id,
+                    user_name: user.first_name,
+                    user_username: user.username
                 })
             });
             document.getElementById('successScreen').style.display = 'block';
             tg.MainButton.hide();
-        } catch(e) { alert("Ошибка"); } finally { tg.MainButton.hideProgress(); }
+        } catch(e) {
+            alert("Ошибка отправки заказа.");
+        } finally {
+            tg.MainButton.hideProgress();
+        }
     });
 
     window.scrollCarousel = (d) => {
