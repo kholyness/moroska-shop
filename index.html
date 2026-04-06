@@ -14,7 +14,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
         .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; display: flex; flex-direction: column; position: relative; transition: transform 0.1s; }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; }
-        .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; z-index: 5; text-transform: uppercase; }
+        .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; z-index: 5; }
         .card-content { padding: 12px; flex-grow: 1; }
         .card-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; height: 36px; overflow: hidden; line-height: 1.3; }
         .card-price { font-weight: bold; color: var(--main-color); font-size: 15px; display: flex; align-items: center; gap: 6px; }
@@ -38,7 +38,7 @@
     </style>
 </head>
 <body>
-<div class="header"><input type="text" id="searchInput" class="search-input" placeholder="Поиск в Moroska..." oninput="handleSearch()"></div>
+<div class="header"><input type="text" id="searchInput" class="search-input" placeholder="Поиск..." oninput="handleSearch()"></div>
 <div id="skeleton-loader" class="grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
 <div id="app" class="grid" style="display:none;"></div>
 <div id="productModal"><div class="modal-close" onclick="closeModal()">✕</div><div id="modalContent" class="modal-container"></div></div>
@@ -47,7 +47,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbyQKMBj_tASZSKchlt0TZc-cUB746jAxB0wpYrAi5eO8gRENb5AC2HECmf1-hHTJ-b8hA/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyQKMBj_tASZSKchlt0TZc-cUB746jAxB0wpYrAi5eO8gRENb5AC2HECmf1-hHTJ-b8hA/exec; 
     let currentData = {}, currentTab = 'Stock', activeItem = null;
 
     async function init() {
@@ -67,18 +67,15 @@
             const isFab = currentTab === 'Fabrics';
             const title = isFab ? (item.Название_ткани || "") : (item.Название || "");
             const photo = (item.Фото || "").split(',')[0].trim();
-            
-            // ПРОВЕРКА SALE: берем из колонки Скидка, превращаем в строку и убираем пробелы
-            const saleVal = String(item.Скидка || item['Скидка'] || "").trim();
-            const oldP = item.Старая_цена || item['Старая цена'] || "";
-
+            const sale = item.Скидка || "";
+            const old = item.Старая_цена || item['Старая цена'] || "";
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${(!isFab && saleVal.length > 0) ? `<div class="sale-badge">${saleVal}</div>` : ''}
+                    ${(!isFab && sale) ? `<div class="sale-badge">${sale}</div>` : ''}
                     <img src="${photo}" loading="lazy">
                     <div class="card-content">
                         <div class="card-title">${title}</div>
-                        ${!isFab ? `<div class="card-price">${oldP ? `<span class="old-p">${oldP}</span>` : ''}<span>${item.Цена || 0} RSD</span></div>` : ''}
+                        ${!isFab ? `<div class="card-price">${old ? `<span class="old-p">${old}</span>` : ''}<span>${item.Цена || 0} RSD</span></div>` : ''}
                     </div>
                 </div>`;
         }).join('');
@@ -89,7 +86,7 @@
         const isFab = tab === 'Fabrics';
         const title = isFab ? (item.Название_ткани || "") : (item.Название || "");
         const photos = (item.Фото || "").split(',').map(p => p.trim());
-        const oldP = item.Старая_цена || item['Старая цена'] || "";
+        const old = item.Старая_цена || item['Старая цена'] || "";
 
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
@@ -97,7 +94,7 @@
                 <div class="carousel" id="modalCarousel">${photos.map(p => `<img src="${p}">`).join('')}</div>
             </div>
             <div class="modal-info">
-                ${!isFab ? `<div style="font-size:24px; font-weight:800; color:var(--main-color); margin-bottom:10px;">${oldP ? `<span class="old-p" style="font-size:18px; margin-right:10px;">${oldP} RSD</span>` : ''}${item.Цена || 0} RSD</div>` : ''}
+                ${!isFab ? `<div style="font-size:24px; font-weight:800; color:var(--main-color); margin-bottom:10px;">${old ? `<span class="old-p" style="font-size:18px; margin-right:10px;">${old} RSD</span>` : ''}${item.Цена || 0} RSD</div>` : ''}
                 <h2 style="margin:0 0 15px 0;">${title}</h2>
                 <div style="line-height:1.6; white-space:pre-wrap; color:#444;">${item.Описание || ""}</div>
             </div>`;
