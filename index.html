@@ -1,153 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Moroska Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --main: #5d7a6d; --bg: #fcfcfc; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; }
+        .header { position: sticky; top: 0; background: white; padding: 10px; z-index: 100; border-bottom: 1px solid #eee; }
+        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card-content { padding: 10px; }
+        .card-title { font-size: 14px; font-weight: 600; height: 36px; overflow: hidden; }
+        .card-price { color: var(--main); font-weight: bold; margin-top: 5px; }
+        
+        /* Модалка */
+        #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
+        .modal-close { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.1); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1010; }
+        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; }
+        .modal-info { padding: 20px; }
+
+        /* Навигация */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 60px; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; line-height: 60px; font-size: 12px; font-weight: bold; color: #aaa; text-transform: uppercase; }
+        .nav-item.active { color: var(--main); }
+
+        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 100px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <input type="text" id="searchInput" class="search-input" placeholder="Поиск..." oninput="handleSearch()">
+</div>
+
+<div id="app" class="grid"></div>
+
+<div id="productModal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <div id="modalContent"></div>
+</div>
+
+<div id="successScreen">
+    <h1>Заказ отправлен!</h1>
+    <p>Я скоро напишу вам в Telegram.</p>
+    <button onclick="location.reload()" style="background:var(--main); color:white; border:none; padding:15px; border-radius:10px;">Вернуться в магазин</button>
+</div>
+
+<div class="nav">
+    <div class="nav-item active" onclick="changeTab('Stock', this)">Наличие</div>
+    <div class="nav-item" onclick="changeTab('Catalog', this)">Каталог</div>
+    <div class="nav-item" onclick="changeTab('Fabrics', this)">Ткани</div>
+</div>
+
 <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-    
-    // ТВОЯ ССЫЛКА НА СКРИПТ (замени на свою актуальную)
-    const API_URL = "https://script.google.com/macros/s/AKfycbzY6jrG5u8_N20fHzDnl-FN-XxcKnePUXYQPlCA7rHO5JXKGtlO0CVphdI8hrtid8bOPw/exec"; 
+
+    // !!! ЗАМЕНИ ЭТУ ССЫЛКУ НА СВОЮ !!!
+    const API_URL = "https://script.google.com/macros/s/AKfycbyCUeY_FBmN-d-4EkbznhcJX6j-Iu6oL-peMKLynSOdK_zZ-Ie7uYxr4jw-xZVsWDQogw/exec";
 
     let currentData = {};
     let currentTab = 'Stock';
     let activeProduct = null;
 
-    // Функция для безопасного вывода текста (чтобы не ломать верстку)
-    function esc(text) {
-        if (!text) return '';
-        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    // Красивое форматирование цены
-    function fmtPrice(num) {
-        return new Intl.NumberFormat('ru-RU').format(num || 0);
-    }
-
-    tg.MainButton.onClick(() => { if (activeProduct) sendOrder(); });
-
     async function init() {
+        const app = document.getElementById('app');
+        app.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Загрузка мастерской...</p>';
         try {
-            const res = await fetch(API_URL);
-            currentData = await res.json();
-            document.getElementById('skeleton-loader').style.display = 'none';
-            document.getElementById('app').style.display = 'grid';
-            render(currentData.Stock);
-        } catch(e) { 
-            console.error("Ошибка загрузки:", e);
-            document.getElementById('app').innerHTML = '<p style="text-align:center; padding:50px;">Ошибка загрузки данных. Проверьте соединение.</p>';
-            document.getElementById('app').style.display = 'block';
+            const response = await fetch(API_URL);
+            currentData = await response.json();
+            render(currentData.Stock || []);
+        } catch (e) {
+            app.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:red;">Ошибка загрузки. Проверьте ссылку в коде или доступ к таблице.</p>';
         }
     }
 
     function render(items) {
         const app = document.getElementById('app');
         if (!items || items.length === 0) {
-            app.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#999;">В этом разделе пока пусто</p>';
+            app.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Пусто</p>';
             return;
         }
-
-        app.innerHTML = items.map((item, index) => {
+        app.innerHTML = items.map((item, idx) => {
             const isFab = currentTab === 'Fabrics';
-            // Выбираем название и фото в зависимости от вкладки
-            const title = isFab ? (item.Название_ткани || "Без названия") : (item.Название || "Без названия");
-            const photoRaw = isFab ? (item.ОписаниеФото || "") : (item.Фото || "");
-            const photo = photoRaw.split(',')[0].trim();
+            const title = isFab ? (item.Название_ткани || "Ткань") : (item.Название || "Товар");
+            const photo = (isFab ? (item.ОписаниеФото || "") : (item.Фото || "")).split(',')[0].trim();
             const price = item.Цена || 0;
-
+            
             return `
-                <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    <img src="${esc(photo)}" onerror="this.style.opacity='0.3'" loading="lazy">
+                <div class="card" onclick="openProduct('${currentTab}', ${idx})">
+                    <img src="${photo || 'https://via.placeholder.com/300'}" onerror="this.style.opacity='0.3'">
                     <div class="card-content">
-                        <div class="card-title">${esc(title)}</div>
-                        <div class="card-price">${isFab ? '' : fmtPrice(price) + ' RSD'}</div>
+                        <div class="card-title">${title}</div>
+                        <div class="card-price">${isFab ? '' : price + ' RSD'}</div>
                     </div>
                 </div>
             `;
         }).join('');
     }
 
-    function openProduct(tab, index) {
-        const item = currentData[tab][index];
+    function openProduct(tab, idx) {
+        const item = currentData[tab][idx];
         const isFab = tab === 'Fabrics';
-        
-        // Для тканей сбрасываем активный товар, чтобы кнопка заказа не работала
         activeProduct = isFab ? null : { name: item.Название, price: item.Цена };
 
         const modal = document.getElementById('productModal');
         const content = document.getElementById('modalContent');
-        const photoField = isFab ? (item.ОписаниеФото || "") : (item.Фото || "");
-        const photos = photoField.split(',').filter(p => p.trim() !== "").map(p => p.trim());
-        
+        const photos = (isFab ? (item.ОписаниеФото || "") : (item.Фото || "")).split(',').map(p => p.trim()).filter(p => p);
+
         content.innerHTML = `
-            <div class="carousel-wrapper">
-                <div class="carousel" id="mainCarousel" onscroll="syncDots()">
-                    ${photos.length > 0 ? photos.map(p => `<img src="${esc(p)}">`).join('') : '<div style="height:200px; background:#eee;"></div>'}
-                </div>
-                <div class="carousel-dots" id="dots">
-                    ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('')}
-                </div>
+            <div class="carousel">
+                ${photos.map(p => `<img src="${p}">`).join('')}
             </div>
             <div class="modal-info">
-                <h2 style="margin-top:0">${esc(isFab ? item.Название_ткани : item.Название)}</h2>
-                ${isFab ? '' : `<div style="margin-bottom:15px; color:#5d7a6d; font-size:24px; font-weight:800;">${fmtPrice(item.Цена)} RSD</div>`}
-                <div style="line-height: 1.6; white-space: pre-wrap;">${esc(item.Описание || "")}</div>
+                <h2>${isFab ? item.Название_ткани : item.Название}</h2>
+                ${isFab ? `<p><b>Тип:</b> ${item.Тип || ""}</p>` : `<h3 style="color:#5d7a6d">${item.Цена} RSD</h3>`}
+                <p style="white-space:pre-wrap;">${item.Описание || ""}</p>
             </div>
         `;
-        
         modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-
-        // Кнопка в Telegram
-        if (isFab) {
-            tg.MainButton.hide();
+        
+        if (!isFab) {
+            tg.MainButton.setText("ЗАКАЗАТЬ").show();
         } else {
-            tg.MainButton.setText('ЗАКАЗАТЬ').show();
+            tg.MainButton.hide();
         }
     }
 
-    async function sendOrder() {
+    tg.MainButton.onClick(async () => {
         tg.MainButton.showProgress();
-        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest', username: 'none'};
+        const user = tg.initDataUnsafe.user || {id: 0, first_name: "Guest"};
         try {
-            await fetch(API_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({ 
-                    item: activeProduct.name, 
-                    price: activeProduct.price, 
-                    user_id: user.id, 
-                    user_name: user.first_name, 
-                    user_username: user.username 
-                }) 
+            await fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({
+                    item: activeProduct.name,
+                    price: activeProduct.price,
+                    user_id: user.id,
+                    user_name: user.first_name,
+                    user_username: user.username
+                })
             });
             setTimeout(() => {
                 document.getElementById('successScreen').style.display = 'block';
                 tg.MainButton.hide();
             }, 500);
-        } catch(e) { alert("Ошибка при отправке!"); } 
+        } catch (e) { alert("Ошибка!"); }
         finally { tg.MainButton.hideProgress(); }
-    }
+    });
 
-    window.syncDots = function() {
-        const c = document.getElementById('mainCarousel');
-        if(!c) return;
-        const idx = Math.round(c.scrollLeft / (c.offsetWidth || 1));
-        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-    }
-
-    window.closeModal = function() {
+    function closeModal() {
         document.getElementById('productModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
         tg.MainButton.hide();
     }
 
-    window.changeTab = function(tab, el) {
+    function changeTab(tab, el) {
         currentTab = tab;
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         el.classList.add('active');
-        if (currentData[tab]) {
-            render(currentData[tab]);
-        }
-        window.scrollTo(0,0);
+        render(currentData[tab] || []);
+    }
+
+    function handleSearch() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = currentData[currentTab].filter(item => {
+            const name = (item.Название || item.Название_ткани || "").toLowerCase();
+            return name.includes(query);
+        });
+        render(filtered);
     }
 
     init();
 </script>
+</body>
+</html>
