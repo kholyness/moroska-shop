@@ -6,22 +6,13 @@
     <title>Moroska Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { 
-            --main-color: #5d7a6d; 
-            --bg-color: #fcfcfc; 
-            --sale-color: rgba(231, 76, 60, 0.95);
-            --skeleton-bg: #f0f0f0; 
-        }
-        
+        :root { --main-color: #5d7a6d; --bg-color: #fcfcfc; --sale-color: rgba(231, 76, 60, 0.95); --skeleton-bg: #f0f0f0; }
         * { -webkit-touch-callout: none; -webkit-user-select: none; box-sizing: border-box; }
-        
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; }
 
-        /* Шапка и поиск */
         .header { position: sticky; top: 0; background: white; padding: 10px 15px; z-index: 100; border-bottom: 1px solid #eee; }
         .search-input { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #ddd; outline: none; font-size: 15px; }
 
-        /* Сетка и карточки */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
         .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; display: flex; flex-direction: column; position: relative; transition: transform 0.1s; }
         .card:active { transform: scale(0.97); }
@@ -32,12 +23,10 @@
         .card-title { font-size: 14px; font-weight: 600; margin-bottom: 5px; height: 36px; overflow: hidden; line-height: 1.3; color: #333; }
         .card-price { font-weight: bold; color: var(--main-color); font-size: 15px; }
 
-        /* Скелетоны */
         .skeleton { background: var(--skeleton-bg); border-radius: 18px; height: 250px; position: relative; overflow: hidden; }
         .skeleton::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: loading 1.5s infinite; }
         @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        /* Модалка и Карусель */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
         .modal-container { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
         .modal-close { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.8); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1001; backdrop-filter: blur(5px); font-size: 20px; cursor: pointer; }
@@ -47,25 +36,22 @@
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; max-height: 500px; object-fit: cover; }
 
-        /* Стрелки листания */
-        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; font-weight: bold; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; border: none; font-weight: bold; }
         .arrow-left { left: 10px; }
         .arrow-right { right: 10px; }
 
         .modal-info { padding: 25px; }
         .modal-price { font-size: 24px; font-weight: 800; color: var(--main-color); margin-bottom: 10px; }
 
-        /* Нижняя навигация */
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 75px; align-items: center; z-index: 999; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; text-align: center; font-size: 12px; color: #bbb; cursor: pointer; font-weight: 600; text-transform: uppercase; }
         .nav-item.active { color: var(--main-color); }
+        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 100px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <input type="text" id="searchInput" class="search-input" placeholder="Поиск в Moroska..." oninput="handleSearch()">
-</div>
+<div class="header"><input type="text" id="searchInput" class="search-input" placeholder="Поиск..." oninput="handleSearch()"></div>
 
 <div id="skeleton-loader" class="grid">
     <div class="skeleton"></div><div class="skeleton"></div>
@@ -79,6 +65,12 @@
     <div id="modalContent" class="modal-container"></div>
 </div>
 
+<div id="successScreen">
+    <h1 style="color:var(--main-color)">Заказ отправлен!</h1>
+    <p>Я скоро свяжусь с вами.</p>
+    <button onclick="location.reload()" style="background:var(--main-color); color:white; border:none; padding:15px 30px; border-radius:12px; font-weight:bold;">Ок</button>
+</div>
+
 <div class="nav">
     <div class="nav-item active" onclick="changeTab('Stock', this)">Наличие</div>
     <div class="nav-item" onclick="changeTab('Catalog', this)">Каталог</div>
@@ -87,77 +79,58 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // ТВОЯ ССЫЛКА
-    const API_URL = "https://script.google.com/macros/s/AKfycbwfbI-lk1j1HArtXMQS9B_VwlpYUXa0Y9y0vOqAH0YcT58zpKDov1b2FWyaoKIQO_gFJw/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzIVC1GpSSdz8M8oSbZuh9LTrpOESE6dhGdVGnzlL7FHLpp7OBYVZQXcDMuWhEd7DAr6w/exec"; 
 
     let currentData = {};
     let currentTab = 'Stock';
+    let activeItem = null;
 
     async function init() {
         try {
-            tg.ready();
-            tg.expand();
+            tg.ready(); tg.expand();
             const res = await fetch(API_URL);
             currentData = await res.json();
-            
             document.getElementById('skeleton-loader').style.display = 'none';
             document.getElementById('app').style.display = 'grid';
-            
             render(currentData.Stock);
-        } catch(e) { console.error("Load error"); }
+        } catch(e) { console.error("Error"); }
     }
 
     function render(items) {
         const app = document.getElementById('app');
-        if (!items || items.length === 0) {
-            app.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#999;">Ничего не найдено</p>';
-            return;
-        }
-
-        app.innerHTML = items.map((item, index) => {
+        app.innerHTML = (items || []).map((item, index) => {
             const isFab = currentTab === 'Fabrics';
             const title = isFab ? (item.Название_ткани || "") : (item.Название || "");
             const photo = (item.Фото || "").split(',')[0].trim();
-            const price = item.Цена || "";
-            const sale = item.Скидка || "";
-
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${(!isFab && sale) ? `<div class="sale-badge">${sale}</div>` : ''}
+                    ${(!isFab && item.Скидка) ? `<div class="sale-badge">${item.Скидка}</div>` : ''}
                     <img src="${photo}" loading="lazy">
                     <div class="card-content">
                         <div class="card-title">${title}</div>
-                        ${!isFab ? `<div class="card-price">${price} RSD</div>` : ''}
+                        ${!isFab ? `<div class="card-price">${item.Цена || 0} RSD</div>` : ''}
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     function openProduct(tab, index) {
         const item = currentData[tab][index];
+        activeItem = item;
         const isFab = tab === 'Fabrics';
         const title = isFab ? (item.Название_ткани || "") : (item.Название || "");
         const photos = (item.Фото || "").split(',').map(p => p.trim());
-        const desc = item.Описание || "";
 
-        const content = document.getElementById('modalContent');
-        content.innerHTML = `
+        document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
-                ${photos.length > 1 ? `
-                    <button class="nav-arrow arrow-left" onclick="scrollCarousel(-1)">❮</button>
-                    <button class="nav-arrow arrow-right" onclick="scrollCarousel(1)">❯</button>
-                ` : ''}
-                <div class="carousel" id="modalCarousel">
-                    ${photos.map(p => `<img src="${p}">`).join('')}
-                </div>
+                ${photos.length > 1 ? `<button class="nav-arrow arrow-left" onclick="scrollCarousel(-1)">❮</button><button class="nav-arrow arrow-right" onclick="scrollCarousel(1)">❯</button>` : ''}
+                <div class="carousel" id="modalCarousel">${photos.map(p => `<img src="${p}">`).join('')}</div>
             </div>
             <div class="modal-info">
                 ${!isFab ? `<div class="modal-price">${item.Цена || 0} RSD</div>` : ''}
-                <h2 style="margin: 0 0 15px 0;">${title}</h2>
-                <div style="line-height: 1.6; white-space: pre-wrap; color: #444;">${desc}</div>
-            </div>
-        `;
+                <h2 style="margin:0 0 15px 0;">${title}</h2>
+                <div style="line-height:1.6; white-space:pre-wrap; color:#444;">${item.Описание || ""}</div>
+            </div>`;
 
         document.getElementById('productModal').style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -169,11 +142,29 @@
         }
     }
 
-    // Функция для стрелок листания
-    window.scrollCarousel = (direction) => {
-        const carousel = document.getElementById('modalCarousel');
-        const width = carousel.offsetWidth;
-        carousel.scrollBy({ left: width * direction, behavior: 'smooth' });
+    tg.MainButton.onClick(async () => {
+        tg.MainButton.showProgress();
+        const user = tg.initDataUnsafe.user || {username: 'guest'};
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "order",
+                    item: activeItem.Название || activeItem.Название_ткани,
+                    sku: activeItem.Артикул || activeItem.Артикул_ткани || "—",
+                    price: activeItem.Цена || 0,
+                    type: currentTab,
+                    user: user.username
+                })
+            });
+            document.getElementById('successScreen').style.display = 'block';
+            tg.MainButton.hide();
+        } catch(e) { alert("Ошибка"); } finally { tg.MainButton.hideProgress(); }
+    });
+
+    window.scrollCarousel = (d) => {
+        const c = document.getElementById('modalCarousel');
+        c.scrollBy({ left: c.offsetWidth * d, behavior: 'smooth' });
     };
 
     window.closeModal = () => {
@@ -193,8 +184,7 @@
     window.handleSearch = () => {
         const q = document.getElementById('searchInput').value.toLowerCase();
         const filtered = (currentData[currentTab] || []).filter(item => {
-            const val = (item.Название || item.Название_ткани || "").toLowerCase();
-            return val.includes(q);
+            return (item.Название || item.Название_ткани || "").toLowerCase().includes(q);
         });
         render(filtered);
     };
