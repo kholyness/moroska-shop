@@ -11,37 +11,36 @@
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; overflow-x: hidden; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; max-width: 1200px; margin: 0 auto; }
-        .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 3/4; position: relative; overflow: hidden; }
+        .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; position: relative; overflow: hidden; }
         .skeleton::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: load 1.5s infinite; }
         @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
         .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; cursor: pointer; }
-        .card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; object-position: center; background: #f0f0f0; display: block; }
+        .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; object-position: center; background: #f0f0f0; display: block; }
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
         
         .card-content { padding: 10px; }
         .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; color: #333; line-height: 1.3; }
         
-        /* Цена и кнопка в один ряд */
         .card-footer { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
         .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; }
         .old-p { text-decoration: line-through; color: #aaa; font-size: 10px; font-weight: 400; display: block; }
         
         .buy-btn-sm { background: var(--main-color); color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
 
-        /* Модалка */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: rgba(255,255,255,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1010; cursor: pointer; color: #333; font-size: 20px; border: none; backdrop-filter: blur(4px); }
+
         .carousel-wrapper { position: relative; width: 100%; background: #f4f4f4; }
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
-        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 4/3; object-fit: cover; }
+        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 4/5; object-fit: cover; }
         
-        /* Точки навигации */
-        .dots { display: flex; justify-content: center; gap: 6px; padding: 12px 0; }
+        .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; transition: 0.3s; }
         .dot.active { background: var(--main-color); width: 12px; border-radius: 4px; }
 
-        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.6); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; border: none; font-size: 14px; }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.4); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; border: none; font-size: 12px; }
         .arrow-left { left: 10px; } .arrow-right { right: 10px; }
 
         .modal-body { padding: 20px; max-width:600px; margin: 0 auto; }
@@ -56,9 +55,8 @@
 </head>
 <body>
 <div id="skeleton-loader" class="grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-<div id="errorOverlay">Ошибка загрузки данных.</div>
+<div id="errorOverlay">Ошибка загрузки.</div>
 <div id="app" class="grid" style="display:none;"></div>
-
 <div id="productModal"><div id="modalContent"></div></div>
 
 <div id="successScreen">
@@ -119,7 +117,7 @@
                             ${!isFab ? `
                                 <div>
                                     ${old ? `<span class="old-p">${esc(old)}</span>` : ''}
-                                    <span class="card-price">${esc(item.Цена)} <small>RSD</small></span>
+                                    <span class="card-price">${esc(item.Price || item.Цена)} <small>RSD</small></span>
                                 </div>
                                 <button class="buy-btn-sm">${btnText}</button>
                             ` : `<div style="font-size:10px; color:#999;">Ткань</div>`}
@@ -141,6 +139,7 @@
 
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
+                <button class="modal-close-btn" onclick="closeModal()">✕</button>
                 ${photos.length > 1 ? `
                     <button class="nav-arrow arrow-left" onclick="scrollC(-1, ${photos.length})">❮</button>
                     <button class="nav-arrow arrow-right" onclick="scrollC(1, ${photos.length})">❯</button>
@@ -152,11 +151,11 @@
             </div>
             <div class="modal-body">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <h2 style="margin:0; font-size:18px; flex:1;">${esc(title)}</h2>
+                    <h2 style="margin:0; font-size:17px; flex:1; padding-right:10px;">${esc(title)}</h2>
                     ${!isFab ? `
                         <div style="text-align:right;">
-                            ${old ? `<div class="old-p" style="font-size:12px;">${esc(old)} RSD</div>` : ''}
-                            <div style="font-size:20px; font-weight:800; color:var(--main-color);">${esc(item.Цена)} <span style="font-size:12px;">RSD</span></div>
+                            ${old ? `<div class="old-p" style="font-size:11px;">${esc(old)} RSD</div>` : ''}
+                            <div style="font-size:18px; font-weight:800; color:var(--main-color);">${esc(item.Price || item.Цена)} <span style="font-size:11px;">RSD</span></div>
                         </div>
                     ` : ''}
                 </div>
@@ -167,7 +166,7 @@
         document.body.style.overflow = 'hidden';
         tg.BackButton.show();
         tg.BackButton.onClick(closeModal);
-        if (!isFab) { tg.MainButton.setText(tab === 'Stock' ? 'ОФОРМИТЬ ПОКУПКУ' : 'ЗАКАЗАТЬ ПОШИВ').show(); } else { tg.MainButton.hide(); }
+        if (!isFab) { tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ').show(); } else { tg.MainButton.hide(); }
     }
 
     window.scrollC = (dir, total) => {
@@ -185,7 +184,7 @@
         const c = document.getElementById('modalCarousel');
         const idx = Math.round(c.scrollLeft / c.offsetWidth);
         const dots = document.querySelectorAll('.dot');
-        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        if(dots.length) dots.forEach((d, i) => d.classList.toggle('active', i === idx));
     };
 
     tg.MainButton.onClick(async () => {
@@ -197,7 +196,7 @@
                 body: JSON.stringify({
                     action: "order", item: activeItem.Название || activeItem.Название_ткани,
                     sku: activeItem.Артикул || activeItem.Артикул_ткани || "—",
-                    price: activeItem.Цена || 0, type: currentTab,
+                    price: activeItem.Price || activeItem.Цена || 0, type: currentTab,
                     user_id: user.id, user_name: user.first_name, user_username: user.username
                 })
             });
