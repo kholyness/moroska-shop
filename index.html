@@ -16,12 +16,13 @@
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
         .card-content { padding: 10px; }
         .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; color: #333; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; }
-        .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; }
-        .old-p { text-decoration: line-through; color: #aaa; font-size: 10px; }
-        .buy-btn-sm { background: var(--main-color); color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .card-footer { display: flex; justify-content: space-between; align-items: flex-end; }
+        .price-stack { display: flex; flex-direction: column; }
+        .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; line-height: 1.2; }
+        .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
+        .buy-btn-sm { background: var(--main-color); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; }
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
-        .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: rgba(255,255,255,0.7); border-radius: 50%; z-index: 1010; border: none; font-size: 20px; }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: rgba(255,255,255,0.7); border-radius: 50%; z-index: 1010; border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .carousel-wrapper { position: relative; width: 100%; }
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
@@ -31,7 +32,7 @@
         .dot.active { background: var(--main-color); width: 12px; border-radius: 4px; }
         .modal-body { padding: 20px; }
         .modal-desc { line-height: 1.5; color: #666; font-size: 13px; white-space: pre-wrap; margin-top: 15px; }
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 999; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 999; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: #bbb; font-weight: 700; cursor: pointer; }
         .nav-item.active { color: var(--main-color); }
         #errorOverlay { display: none; padding: 40px; text-align: center; color: #777; }
@@ -56,13 +57,12 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // ЗАМЕНИ НА СВОЮ ССЫЛКУ!
+    // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА
     const API_URL = "https://script.google.com/macros/s/AKfycbycxVPLnvyw89_Z_VutfDtYGss_PoVm-j-D7xT4lljYCqST7Be1yXxREZ_5Gws6CroZjA/exec";
     let currentData = {}, currentTab = 'Stock', activeItem = null;
 
     const esc = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // Обработка данных через JSONP
     window.handleData = function(data) {
         currentData = data;
         if (currentData.Stock) {
@@ -88,7 +88,8 @@
             const isFab = currentTab === 'Fabrics';
             const title = isFab ? item.Название_ткани : item.Название;
             const photo = (item.Фото || "").split(',')[0].trim();
-            const old = item.Старая_цена || item['Старая цена'];
+            const oldPrice = item.Старая_цена || item['Старая цена'];
+            
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
                     ${(!isFab && item.Скидка) ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
@@ -96,7 +97,11 @@
                     <div class="card-content">
                         <div class="card-title">${esc(title)}</div>
                         <div class="card-footer">
-                            ${!isFab ? `<div>${old ? `<span class="old-p">${esc(old)}</span>` : ''}<span class="card-price">${esc(item.Цена)} RSD</span></div><button class="buy-btn-sm">ЗАКАЗ</button>` : '<div style="font-size:10px;color:#999;">Ткань</div>'}
+                            <div class="price-stack">
+                                ${(!isFab && oldPrice) ? `<span class="old-p">${esc(oldPrice)}</span>` : ''}
+                                ${!isFab ? `<span class="card-price">${esc(item.Цена)} RSD</span>` : '<span style="font-size:10px;color:#999;">Ткань</span>'}
+                            </div>
+                            ${!isFab ? `<button class="buy-btn-sm">ЗАКАЗ</button>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -106,7 +111,10 @@
     function openProduct(tab, index) {
         const item = currentData[tab][index];
         activeItem = item;
+        const isFab = tab === 'Fabrics';
         const photos = (item.Фото || "").split(',').map(p => p.trim());
+        const oldPrice = item.Старая_цена || item['Старая цена'];
+
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
@@ -114,12 +122,21 @@
                 ${photos.length > 1 ? `<div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
             </div>
             <div class="modal-body">
-                <h2 style="font-size:18px;margin:0;">${esc(item.Название || item.Название_ткани)}</h2>
-                <div class="card-price" style="font-size:20px;margin:10px 0;">${esc(item.Цена)} RSD</div>
+                <h2 style="font-size:18px;margin:0 0 10px 0;">${esc(item.Название || item.Название_ткани)}</h2>
+                ${!isFab ? `
+                    <div class="price-stack" style="margin-bottom:15px;">
+                        ${oldPrice ? `<span class="old-p" style="font-size:14px;">${esc(oldPrice)}</span>` : ''}
+                        <span class="card-price" style="font-size:22px;">${esc(item.Цена)} RSD</span>
+                    </div>
+                ` : ''}
                 <div class="modal-desc">${esc(item.Описание)}</div>
             </div>`;
         document.getElementById('productModal').style.display = 'block';
-        tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ').show();
+        if (!isFab) {
+            tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ').show();
+        } else {
+            tg.MainButton.hide();
+        }
     }
 
     tg.MainButton.onClick(async () => {
