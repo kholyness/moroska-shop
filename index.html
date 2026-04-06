@@ -57,7 +57,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА
+    // ЗАМЕНИ НА СВОЮ ССЫЛКУ ИЗ GOOGLE SCRIPTS
     const API_URL = "https://script.google.com/macros/s/AKfycbycxVPLnvyw89_Z_VutfDtYGss_PoVm-j-D7xT4lljYCqST7Be1yXxREZ_5Gws6CroZjA/exec";
     let currentData = {}, currentTab = 'Stock', activeItem = null;
 
@@ -118,6 +118,7 @@
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
+                ${(!isFab && item.Скидка) ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
                 <div class="carousel" id="modalCarousel" onscroll="updateDots(${photos.length})">${photos.map(p => `<img src="${p}">`).join('')}</div>
                 ${photos.length > 1 ? `<div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
             </div>
