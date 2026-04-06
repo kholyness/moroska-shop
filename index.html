@@ -3,18 +3,22 @@
     tg.ready();
     tg.expand();
     
+    // ТВОЯ ССЫЛКА НА СКРИПТ (замени на свою актуальную)
     const API_URL = "https://script.google.com/macros/s/AKfycbzY6jrG5u8_N20fHzDnl-FN-XxcKnePUXYQPlCA7rHO5JXKGtlO0CVphdI8hrtid8bOPw/exec"; 
 
     let currentData = {};
     let currentTab = 'Stock';
     let activeProduct = null;
 
+    // Функция для безопасного вывода текста (чтобы не ломать верстку)
     function esc(text) {
-        return text ? String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+        if (!text) return '';
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    // Красивое форматирование цены
     function fmtPrice(num) {
-        return new Intl.NumberFormat('ru-RU').format(num);
+        return new Intl.NumberFormat('ru-RU').format(num || 0);
     }
 
     tg.MainButton.onClick(() => { if (activeProduct) sendOrder(); });
@@ -26,21 +30,26 @@
             document.getElementById('skeleton-loader').style.display = 'none';
             document.getElementById('app').style.display = 'grid';
             render(currentData.Stock);
-        } catch(e) { console.error("Data error"); }
+        } catch(e) { 
+            console.error("Ошибка загрузки:", e);
+            document.getElementById('app').innerHTML = '<p style="text-align:center; padding:50px;">Ошибка загрузки данных. Проверьте соединение.</p>';
+            document.getElementById('app').style.display = 'block';
+        }
     }
 
     function render(items) {
         const app = document.getElementById('app');
         if (!items || items.length === 0) {
-            app.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#999;">Пусто</p>';
+            app.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding:40px; color:#999;">В этом разделе пока пусто</p>';
             return;
         }
 
         app.innerHTML = items.map((item, index) => {
             const isFab = currentTab === 'Fabrics';
-            const title = isFab ? item.Название_ткани : item.Название;
-            const photoRaw = isFab ? item.ОписаниеФото : item.Фото;
-            const photo = (photoRaw || "").split(',')[0].trim();
+            // Выбираем название и фото в зависимости от вкладки
+            const title = isFab ? (item.Название_ткани || "Без названия") : (item.Название || "Без названия");
+            const photoRaw = isFab ? (item.ОписаниеФото || "") : (item.Фото || "");
+            const photo = photoRaw.split(',')[0].trim();
             const price = item.Цена || 0;
 
             return `
@@ -59,17 +68,18 @@
         const item = currentData[tab][index];
         const isFab = tab === 'Fabrics';
         
+        // Для тканей сбрасываем активный товар, чтобы кнопка заказа не работала
         activeProduct = isFab ? null : { name: item.Название, price: item.Цена };
 
         const modal = document.getElementById('productModal');
         const content = document.getElementById('modalContent');
-        const photoField = isFab ? item.ОписаниеФото : item.Фото;
-        const photos = (photoField || "").split(',').map(url => url.trim());
+        const photoField = isFab ? (item.ОписаниеФото || "") : (item.Фото || "");
+        const photos = photoField.split(',').filter(p => p.trim() !== "").map(p => p.trim());
         
         content.innerHTML = `
             <div class="carousel-wrapper">
                 <div class="carousel" id="mainCarousel" onscroll="syncDots()">
-                    ${photos.map(p => `<img src="${esc(p)}">`).join('')}
+                    ${photos.length > 0 ? photos.map(p => `<img src="${esc(p)}">`).join('') : '<div style="height:200px; background:#eee;"></div>'}
                 </div>
                 <div class="carousel-dots" id="dots">
                     ${photos.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('')}
@@ -77,7 +87,7 @@
             </div>
             <div class="modal-info">
                 <h2 style="margin-top:0">${esc(isFab ? item.Название_ткани : item.Название)}</h2>
-                ${isFab ? '' : `<div class="modal-current-price" style="margin-bottom:15px; color:#5d7a6d; font-size:24px; font-weight:800;">${fmtPrice(item.Цена)} RSD</div>`}
+                ${isFab ? '' : `<div style="margin-bottom:15px; color:#5d7a6d; font-size:24px; font-weight:800;">${fmtPrice(item.Цена)} RSD</div>`}
                 <div style="line-height: 1.6; white-space: pre-wrap;">${esc(item.Описание || "")}</div>
             </div>
         `;
@@ -85,7 +95,7 @@
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
 
-        // Если это ткани — скрываем кнопку заказа, если товары — показываем
+        // Кнопка в Telegram
         if (isFab) {
             tg.MainButton.hide();
         } else {
@@ -112,7 +122,7 @@
                 document.getElementById('successScreen').style.display = 'block';
                 tg.MainButton.hide();
             }, 500);
-        } catch(e) { alert("Ошибка!"); } 
+        } catch(e) { alert("Ошибка при отправке!"); } 
         finally { tg.MainButton.hideProgress(); }
     }
 
@@ -133,7 +143,9 @@
         currentTab = tab;
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-        render(currentData[tab]);
+        if (currentData[tab]) {
+            render(currentData[tab]);
+        }
         window.scrollTo(0,0);
     }
 
