@@ -17,8 +17,6 @@
 
         .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; cursor: pointer; }
         .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; object-position: center; background: #f0f0f0; display: block; }
-        
-        /* Бейджик скидки */
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; text-transform: uppercase; }
         
         .card-content { padding: 10px; }
@@ -28,7 +26,6 @@
         .old-p { text-decoration: line-through; color: #aaa; font-size: 10px; font-weight: 400; display: block; }
         .buy-btn-sm { background: var(--main-color); color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
 
-        /* Модалка */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
         .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: rgba(255,255,255,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1010; cursor: pointer; color: #333; font-size: 20px; border: none; backdrop-filter: blur(4px); }
 
@@ -36,7 +33,7 @@
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         
-        /* Пропорции в карусели 1:1 и заполнение */
+        /* ТВОЙ ФОРМАТ 1:1 */
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
         
         .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
@@ -64,6 +61,7 @@
 
 <div id="successScreen">
     <h2 style="color:var(--main-color)">Заказ отправлен!</h2>
+    <p id="orderNumberLabel" style="font-weight:bold; color:#666;"></p>
     <p>Я скоро свяжусь с вами.</p>
     <button onclick="location.reload()" style="background:var(--main-color); color:white; border:none; padding:15px 40px; border-radius:14px; font-weight:bold; cursor:pointer;">ОТЛИЧНО</button>
 </div>
@@ -76,7 +74,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbz0p1mIt9_LUxGtwZhr7aUSTCc--RIe5vEFHKPt0G58mUNSw7j5jvg4GKaAlqWEr5rosg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyAEj5vvGdL4qHTOK2UBwvQBB9RVcVwF_9AZqzrfdyX8tiQDyHPVX3AiAWTRxf0A59J3w/exec";
     let currentData = {}, currentTab = 'Stock', activeItem = null, isScrolling = false;
 
     const esc = (str) => { if (!str) return ""; return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
@@ -196,16 +194,26 @@
     tg.MainButton.onClick(async () => {
         tg.MainButton.showProgress();
         const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest', username: 'none'};
+        
+        // ГЕНЕРАЦИЯ НОМЕРА ЗАКАЗА (Дата + часть ID)
+        const now = new Date();
+        const dayMonth = ("0" + now.getDate()).slice(-2) + ("0" + (now.getMonth() + 1)).slice(-2);
+        const userPart = String(user.id).slice(-3);
+        const orderID = dayMonth + "-" + userPart;
+
         try {
             await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({
-                    action: "order", item: activeItem.Название || activeItem.Название_ткани,
+                    action: "order",
+                    order_id: orderID, // Отправляем номер заказа
+                    item: activeItem.Название || activeItem.Название_ткани,
                     sku: activeItem.Артикул || activeItem.Артикул_ткани || "—",
                     price: activeItem.Price || activeItem.Цена || 0, type: currentTab,
                     user_id: user.id, user_name: user.first_name, user_username: user.username
                 })
             });
+            document.getElementById('orderNumberLabel').innerText = "Заказ №" + orderID;
             document.getElementById('successScreen').style.display = 'block';
             tg.MainButton.hide(); tg.BackButton.hide();
         } catch(e) { alert("Ошибка"); } finally { tg.MainButton.hideProgress(); }
