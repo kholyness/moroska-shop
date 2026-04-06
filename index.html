@@ -1,98 +1,49 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moroska Store</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { --main-color: #5d7a6d; --bg-color: #fcfcfc; --sale-color: rgba(231, 76, 60, 0.95); --bron-color: #f39c12; }
-        * { -webkit-touch-callout: none; -webkit-user-select: none; box-sizing: border-box; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; }
-        
-        .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; position: relative; display: flex; flex-direction: column; }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eee; }
-        
-        .badge { position: absolute; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; color: white; z-index: 5; }
-        .sale-badge { top: 10px; left: 10px; background: var(--sale-color); }
-        .bron-badge { bottom: 85px; left: 10px; background: var(--bron-color); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-
-        .card-content { padding: 12px; flex-grow: 1; }
-        .card-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 5px; height: 36px; overflow: hidden; line-height: 1.2; }
-        .card-price { font-weight: bold; color: var(--main-color); font-size: 15px; }
-
-        #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
-        .modal-container { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
-        .modal-close { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.9); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1001; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; background: #f0f0f0; }
-        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; object-fit: cover; max-height: 500px; }
-
-        .modal-info { padding: 25px; }
-        .modal-price { font-size: 24px; font-weight: 800; color: var(--main-color); margin-bottom: 15px; }
-        .modal-desc { line-height: 1.6; white-space: pre-wrap; color: #444; font-size: 15px; }
-
-        .reviews-container { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .review-card { background: #f8f9f8; padding: 15px; border-radius: 14px; margin-bottom: 12px; border: 1px solid #f0f2f0; }
-
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; height: 75px; align-items: center; z-index: 999; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { flex: 1; text-align: center; font-size: 11px; color: #bbb; cursor: pointer; font-weight: 700; letter-spacing: 0.5px; }
-        .nav-item.active { color: var(--main-color); }
-
-        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding: 60px 25px; }
-    </style>
-</head>
-<body>
-
-<div id="app" class="grid"></div>
-
-<div id="productModal">
-    <div class="modal-close" onclick="closeModal()">✕</div>
-    <div id="modalContent" class="modal-container"></div>
-</div>
-
-<div id="successScreen">
-    <div style="font-size: 60px; margin-bottom: 20px;">🎀</div>
-    <h1 style="color:var(--main-color); margin-bottom: 10px;">Бронь принята!</h1>
-    <p style="color: #666; line-height: 1.5;">Номер вашего заказа: <b id="orderIdDisplay" style="color: #333;"></b></p>
-    <p style="color: #666; line-height: 1.5;">Я скоро напишу вам в Telegram для подтверждения деталей.</p>
-    <button onclick="location.reload()" style="background:var(--main-color); color:white; border:none; padding:16px 32px; border-radius:14px; font-weight:bold; margin-top:30px; width: 100%; max-width: 300px;">Вернуться в магазин</button>
-</div>
-
-<div class="nav">
-    <div class="nav-item active" onclick="changeTab('Stock', this)">НАЛИЧИЕ</div>
-    <div class="nav-item" onclick="changeTab('Catalog', this)">КАТАЛОГ</div>
-    <div class="nav-item" onclick="changeTab('Fabrics', this)">ТКАНИ</div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    // ЗАМЕНИ НА СВОЙ URL ПОСЛЕ НОВОГО DEPLOY:
-    const API_URL = "https://script.google.com/macros/s/AKfycbznIKa9d949e8OoaVBZgBiCy7Kk1JhY8vL9Hjv6rdx39XDKpICNxPTNFGOHhIxBIaoeVw/exec"; 
+const tg = window.Telegram.WebApp;
+    // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА:
+    const API_URL = "ТВОЯ_ССЫЛКА_ИЗ_БРАУЗЕРА"; 
 
     let currentData = {};
     let currentTab = 'Stock';
-    let activeItem = null;
 
     async function init() {
+        const app = document.getElementById('app');
         try {
             tg.ready();
             tg.expand();
+            app.innerHTML = '<div style="padding:20px; color:#666;">Загрузка данных из таблицы...</div>';
+            
+            console.log("Запрос к:", API_URL);
             const res = await fetch(API_URL);
-            currentData = await res.json();
-            render(currentData.Stock || []);
+            
+            if (!res.ok) throw new Error("Сервер ответил ошибкой: " + res.status);
+            
+            const text = await res.text();
+            console.log("Получен текст длиной:", text.length);
+            
+            try {
+                currentData = JSON.parse(text);
+            } catch(e) {
+                throw new Error("Ошибка в данных таблицы (JSON): " + e.message);
+            }
+
+            if (!currentData.Stock) throw new Error("Лист 'Stock' не найден в данных!");
+
+            render(currentData.Stock);
         } catch(e) {
-            console.error(e);
-            document.getElementById('app').innerHTML = '<p style="padding:20px;">Ошибка загрузки. Проверьте соединение и API_URL.</p>';
+            // Выводим ошибку ПРЯМО НА ЭКРАН ТЕЛЕФОНА
+            app.innerHTML = `
+                <div style="padding:20px; color:red; font-family:monospace; font-size:12px; background:#fff0f0; border:1px solid red; margin:10px; border-radius:10px;">
+                    <b>Критическая ошибка:</b><br>
+                    ${e.message}<br><br>
+                    <small>Проверь API_URL в коде и названия вкладок в таблице.</small>
+                </div>`;
         }
     }
 
     function render(items) {
         const app = document.getElementById('app');
         if (!items || items.length === 0) {
-            app.innerHTML = '<p style="padding:20px; text-align:center; color:#999;">В этом разделе пока пусто</p>';
+            app.innerHTML = '<p style="padding:20px; text-align:center;">В этом разделе пусто.</p>';
             return;
         }
 
@@ -100,96 +51,31 @@
             .filter(item => item.Статус !== "Подтверждено" && item.Статус !== "Продано") 
             .map((item, index) => {
                 const isBron = item.Статус === "Бронь";
-                const img = item.Фото ? item.Фото.split(',')[0].trim() : "";
+                // Используем проверку на существование полей
+                const title = item.Название || "Без названия";
+                const price = item.Цена || "0";
+                const photo = item.Фото ? item.Фото.split(',')[0].trim() : "https://via.placeholder.com/300";
                 
                 return `
-                    <div class="card" onclick="openProduct('${currentTab}', ${index})" style="${isBron ? 'opacity: 0.7' : ''}">
-                        ${item.Скидка ? `<div class="badge sale-badge">${item.Скидка}</div>` : ''}
+                    <div class="card" onclick="openProduct('${currentTab}', ${index})" style="${isBron ? 'opacity: 0.6' : ''}">
                         ${isBron ? `<div class="badge bron-badge">ЗАБРОНИРОВАНО</div>` : ''}
-                        <img src="${img}" onerror="this.src='https://via.placeholder.com/300?text=Moroska'" loading="lazy">
+                        <img src="${photo}" loading="lazy">
                         <div class="card-content">
-                            <div class="card-title">${item.Название || 'Без названия'}</div>
-                            <div class="card-price">${item.Цена || 0} RSD</div>
+                            <div class="card-title">${title}</div>
+                            <div class="card-price">${price} RSD</div>
                         </div>
                     </div>
                 `;
             }).join('');
     }
 
-    function openProduct(tab, index) {
-        const item = currentData[tab][index];
-        activeItem = item;
-        const isBron = item.Статус === "Бронь";
-        const reviews = (currentData.Reviews || []).filter(r => r.Модель == item.Модель);
-
-        document.getElementById('modalContent').innerHTML = `
-            <div class="carousel">
-                ${item.Фото ? item.Фото.split(',').map(p => `<img src="${p.trim()}">`).join('') : '<img src="https://via.placeholder.com/500">'}
-            </div>
-            <div class="modal-info">
-                <div class="modal-price">${item.Цена || 0} RSD</div>
-                <h2 style="margin: 0 0 15px 0; font-size: 22px;">${item.Название || ''}</h2>
-                <div class="modal-desc">${item.Описание || ''}</div>
-                <div class="reviews-container">
-                    <h3 style="font-size: 16px; margin-bottom: 15px;">Отзывы</h3>
-                    ${reviews.length ? reviews.map(r => `
-                        <div class="review-card">
-                            <div style="font-weight:bold; font-size:13px; margin-bottom:5px;">${r.Имя || 'Аноним'}</div>
-                            <div style="color:#666;">${r.Текст || ''}</div>
-                        </div>
-                    `).join('') : '<p style="color:#999; font-size:14px;">Пока нет отзывов</p>'}
-                </div>
-            </div>
-        `;
-        document.getElementById('productModal').style.display = 'block';
-        
-        if (isBron) {
-            tg.MainButton.setText('ЗАБРОНИРОВАНО').show().disable();
-            tg.MainButton.setParams({color: '#999'});
-        } else {
-            tg.MainButton.setText(tab === 'Stock' ? 'ЗАБРОНИРОВАТЬ' : 'ЗАКАЗАТЬ ПОШИВ').show().enable();
-            tg.MainButton.setParams({color: '#5d7a6d'});
-        }
-    }
-
-    tg.MainButton.onClick(async () => {
-        tg.MainButton.showProgress();
-        const user = tg.initDataUnsafe.user || {id:0, first_name:'Мастер', username:'admin'};
-        
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: "order",
-                    sku: activeItem.Артикул,
-                    price: activeItem.Цена,
-                    type: currentTab,
-                    user_username: user.username
-                })
-            });
-            const result = await res.json();
-            
-            if (result.result === "success") {
-                document.getElementById('orderIdDisplay').innerText = result.orderId;
-                document.getElementById('successScreen').style.display = 'block';
-                tg.MainButton.hide();
-            }
-        } catch(e) {
-            alert("Ошибка при заказе. Попробуйте еще раз.");
-            tg.MainButton.hideProgress();
-        }
-    });
-
-    window.closeModal = () => { document.getElementById('productModal').style.display = 'none'; tg.MainButton.hide(); document.body.style.overflow = 'auto'; }
+    // Временные заглушки для функций, чтобы не было ошибок
+    window.openProduct = (tab, index) => { alert("Нажали на " + currentData[tab][index].Название); };
     window.changeTab = (tab, el) => { 
         currentTab = tab; 
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); 
         el.classList.add('active'); 
         render(currentData[tab] || []); 
-        window.scrollTo(0,0);
-    }
+    };
 
     init();
-</script>
-</body>
-</html>
