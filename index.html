@@ -67,15 +67,25 @@
             const isFab = currentTab === 'Fabrics';
             const title = isFab ? (item.Название_ткани || "") : (item.Название || "");
             const photo = (item.Фото || "").split(',')[0].trim();
-            const sale = item.Скидка || "";
-            const old = item.Старая_цена || item['Старая цена'] || "";
+            
+            // СВЕРХНАДЕЖНАЯ ПРОВЕРКА СКИДКИ
+            const saleVal = item.Скидка || item['Скидка'] || "";
+            const hasSale = String(saleVal).trim().length > 0; // Проверяем, есть ли там хоть один символ
+            
+            const oldP = item.Старая_цена || item['Старая цена'] || "";
+
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${(!isFab && sale) ? `<div class="sale-badge">${sale}</div>` : ''}
+                    ${(!isFab && hasSale) ? `<div class="sale-badge">${saleVal}</div>` : ''}
                     <img src="${photo}" loading="lazy">
                     <div class="card-content">
                         <div class="card-title">${title}</div>
-                        ${!isFab ? `<div class="card-price">${old ? `<span class="old-p">${old}</span>` : ''}<span>${item.Цена || 0} RSD</span></div>` : ''}
+                        ${!isFab ? `
+                            <div class="card-price">
+                                ${oldP ? `<span class="old-p">${oldP}</span>` : ''}
+                                <span>${item.Цена || 0} RSD</span>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>`;
         }).join('');
