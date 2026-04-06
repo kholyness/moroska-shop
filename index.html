@@ -1,81 +1,73 @@
-const tg = window.Telegram.WebApp;
-    // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА:
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Moroska Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #fcfcfc; margin: 0; padding: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .info { padding: 10px; }
+        .price { color: #5d7a6d; font-weight: bold; }
+        .bron-label { position: absolute; top: 10px; left: 10px; background: orange; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app" class="grid">Загрузка мастерской...</div>
+
+<script>
+    // --- НАСТРОЙКИ ---
     const API_URL = "https://script.google.com/macros/s/AKfycbznIKa9d949e8OoaVBZgBiCy7Kk1JhY8vL9Hjv6rdx39XDKpICNxPTNFGOHhIxBIaoeVw/exec"; 
+    // -----------------
 
-    let currentData = {};
-    let currentTab = 'Stock';
+    const tg = window.Telegram.WebApp;
 
-    async function init() {
+    async function loadData() {
         const app = document.getElementById('app');
         try {
             tg.ready();
             tg.expand();
-            app.innerHTML = '<div style="padding:20px; color:#666;">Загрузка данных из таблицы...</div>';
             
-            console.log("Запрос к:", API_URL);
-            const res = await fetch(API_URL);
+            const response = await fetch(API_URL);
+            const data = await response.json();
             
-            if (!res.ok) throw new Error("Сервер ответил ошибкой: " + res.status);
-            
-            const text = await res.text();
-            console.log("Получен текст длиной:", text.length);
-            
-            try {
-                currentData = JSON.parse(text);
-            } catch(e) {
-                throw new Error("Ошибка в данных таблицы (JSON): " + e.message);
+            if (!data.Stock) {
+                app.innerHTML = "Ошибка: Лист Stock не найден";
+                return;
             }
 
-            if (!currentData.Stock) throw new Error("Лист 'Stock' не найден в данных!");
-
-            render(currentData.Stock);
-        } catch(e) {
-            // Выводим ошибку ПРЯМО НА ЭКРАН ТЕЛЕФОНА
-            app.innerHTML = `
-                <div style="padding:20px; color:red; font-family:monospace; font-size:12px; background:#fff0f0; border:1px solid red; margin:10px; border-radius:10px;">
-                    <b>Критическая ошибка:</b><br>
-                    ${e.message}<br><br>
-                    <small>Проверь API_URL в коде и названия вкладок в таблице.</small>
-                </div>`;
+            render(data.Stock);
+        } catch (e) {
+            app.innerHTML = "Ошибка связи с таблицей: " + e.message;
         }
     }
 
     function render(items) {
         const app = document.getElementById('app');
-        if (!items || items.length === 0) {
-            app.innerHTML = '<p style="padding:20px; text-align:center;">В этом разделе пусто.</p>';
-            return;
-        }
-
         app.innerHTML = items
-            .filter(item => item.Статус !== "Подтверждено" && item.Статус !== "Продано") 
-            .map((item, index) => {
+            .filter(item => item.Статус !== "Подтверждено" && item.Статус !== "Продано")
+            .map(item => {
                 const isBron = item.Статус === "Бронь";
-                // Используем проверку на существование полей
-                const title = item.Название || "Без названия";
-                const price = item.Цена || "0";
-                const photo = item.Фото ? item.Фото.split(',')[0].trim() : "https://via.placeholder.com/300";
+                const photo = item.Фото ? item.Фото.split(',')[0].trim() : "";
                 
                 return `
-                    <div class="card" onclick="openProduct('${currentTab}', ${index})" style="${isBron ? 'opacity: 0.6' : ''}">
-                        ${isBron ? `<div class="badge bron-badge">ЗАБРОНИРОВАНО</div>` : ''}
-                        <img src="${photo}" loading="lazy">
-                        <div class="card-content">
-                            <div class="card-title">${title}</div>
-                            <div class="card-price">${price} RSD</div>
+                    <div class="card" style="${isBron ? 'opacity: 0.6' : ''}">
+                        ${isBron ? '<div class="bron-label">БРОНЬ</div>' : ''}
+                        <img src="${photo}">
+                        <div class="info">
+                            <div style="font-size:14px; margin-bottom:5px;">${item.Название || 'Без названия'}</div>
+                            <div class="price">${item.Цена || 0} RSD</div>
                         </div>
                     </div>
                 `;
             }).join('');
     }
 
-    // Временные заглушки для функций, чтобы не было ошибок
-    window.openProduct = (tab, index) => { alert("Нажали на " + currentData[tab][index].Название); };
-    window.changeTab = (tab, el) => { 
-        currentTab = tab; 
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); 
-        el.classList.add('active'); 
-        render(currentData[tab] || []); 
-    };
-
-    init();
+    loadData();
+</script>
+</body>
+</html>
