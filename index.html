@@ -8,7 +8,7 @@
     <style>
         :root { 
             --main-color: #5d7a6d; 
-            --main-hover: #4a6357; /* Цвет при наведении */
+            --main-hover: #4a6357; 
             --bg-color: #fcfcfc; 
             --card-bg: #ffffff;
             --sale-color: #e74c3c; 
@@ -17,89 +17,57 @@
             --text-main: #333333;
             --text-muted: #666666;
             --nav-inactive: #bbbbbb;
-            --transition: all 0.2s ease-in-out; /* Плавные переходы */
+            --transition: all 0.2s ease-in-out;
         }
         
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); }
         
-        /* Сетка */
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-            gap: 16px; /* Чуть увеличили gap для десктопа */
-            padding: 16px; 
-            max-width: 1200px; /* Ограничили ширину на больших экранах */
-            margin: 0 auto;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
         .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; }
         
-        /* КАРТОЧКА: Hover-эффект */
         .card { 
-            background: var(--card-bg); 
-            border-radius: 18px; 
-            overflow: hidden; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
-            position: relative; 
-            cursor: pointer; /* Классический курсор-ручка */
-            transition: var(--transition);
+            background: var(--card-bg); border-radius: 18px; overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; 
+            cursor: pointer; transition: var(--transition);
         }
-        .card:hover { 
-            transform: translateY(-4px); /* Слегка всплывает */
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08); /* Тень становится глубже */
-        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
         
-        /* Плашки */
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
         .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
         .booked-only { top: 10px !important; }
 
         .card-content { padding: 12px; }
-        .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; color: var(--text-main); }
+        .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; }
         .price-stack { display: flex; flex-direction: column; }
         .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; line-height: 1.2; }
         .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
 
-        /* Модальное окно */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 80px; }
-        
-        /* Кнопка закрытия: Hover */
         .modal-close-btn { 
-            position: absolute; top: 15px; right: 15px; 
-            width: 36px; height: 36px; 
-            background: rgba(255,255,255,0.8); 
-            border-radius: 50%; z-index: 1010; 
-            border: none; font-size: 22px; 
-            display: flex; align-items: center; justify-content: center; 
-            backdrop-filter: blur(4px); 
-            cursor: pointer;
-            transition: var(--transition);
+            position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; 
+            background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; 
+            border: none; font-size: 22px; display: flex; align-items: center; justify-content: center; 
+            backdrop-filter: blur(4px); cursor: pointer; transition: var(--transition);
         }
-        .modal-close-btn:hover { background: rgba(255,255,255,1); transform: rotate(90deg); /* Поворачивается при наведении */ }
+        .modal-close-btn:hover { background: rgba(255,255,255,1); transform: rotate(90deg); }
 
-        /* Карусель и Стрелки */
-        .carousel-wrapper { position: relative; width: 100%; max-width: 600px; /* Ограничили ширину фото */ margin: 0 auto; }
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .carousel-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
         
-        /* Стрелки: Hover */
         .carousel-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 40px; height: 40px;
-            background: rgba(255,255,255,0.7);
-            border-radius: 50%; border: none;
-            font-size: 18px; color: var(--main-color);
+            width: 40px; height: 40px; background: rgba(255,255,255,0.7);
+            border-radius: 50%; border: none; font-size: 18px; color: var(--main-color);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 8;
-            transition: var(--transition);
-            backdrop-filter: blur(2px);
+            cursor: pointer; z-index: 8; transition: var(--transition); backdrop-filter: blur(2px);
         }
         .carousel-btn:hover { background: rgba(255,255,255,1); }
         .carousel-btn.prev { left: 15px; }
         .carousel-btn.next { right: 15px; }
-        /* Прячем стрелки, если фото одно (через JS) */
 
         .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
@@ -108,52 +76,28 @@
         .modal-body { padding: 20px; max-width: 600px; margin: 0 auto; }
         .modal-header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; gap: 15px; }
         
-        /* КНОПКА ДЕЙСТВИЯ: Hover-эффект */
         .action-btn { 
-            background: var(--main-color); 
-            color: white; 
-            border: none; 
-            padding: 14px 24px; 
-            border-radius: 14px; 
-            font-size: 14px; 
-            font-weight: 700; 
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(93, 122, 109, 0.2);
+            background: var(--main-color); color: white; border: none; padding: 14px 24px; 
+            border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: var(--transition); box-shadow: 0 4px 15px rgba(93, 122, 109, 0.2);
         }
-        .action-btn:hover { 
-            background: var(--main-hover); /* Становится темнее */
-            transform: scale(1.03); /* Чуть увеличивается */
-            box-shadow: 0 6px 20px rgba(93, 122, 109, 0.3);
-        }
-        .action-btn:active { transform: scale(0.97); } /* Эффект нажатия */
+        .action-btn:hover { background: var(--main-hover); transform: scale(1.03); box-shadow: 0 6px 20px rgba(93, 122, 109, 0.3); }
+        .action-btn:active { transform: scale(0.97); }
 
         .btn-booked { background: #eee !important; color: #999 !important; cursor: not-allowed !important; box-shadow: none !important; }
-        .btn-booked:hover { transform: none !important; }
-
         .modal-desc { line-height: 1.6; color: var(--text-muted); font-size: 14px; white-space: pre-wrap; }
 
-        /* Навигация (Веб-стиль) */
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 1100; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
         .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; transition: var(--transition); position: relative; }
-        
-        /* Табы: Hover и Active */
         .nav-item:hover { color: var(--main-hover); }
         .nav-item.active { color: var(--main-color); }
-        
-        /* Эффект подчеркивания */
-        .nav-item.active::after {
-            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 30px; height: 3px; background: var(--main-color); border-radius: 3px;
-        }
+        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
 
-        #errorOverlay { display: none; padding: 40px; text-align: center; color: #777; }
         #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 120px; }
     </style>
 </head>
 <body>
 <div id="skeleton-loader" class="grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-<div id="errorOverlay">Ошибка загрузки.</div>
 <div id="app" class="grid" style="display:none;"></div>
 <div id="productModal"><div id="modalContent"></div></div>
 <div id="successScreen">
@@ -170,6 +114,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
+    // ЗАМЕНИ НА СВОЮ ССЫЛКУ!
     const API_URL = "https://script.google.com/macros/s/AKfycbycxVPLnvyw89_Z_VutfDtYGss_PoVm-j-D7xT4lljYCqST7Be1yXxREZ_5Gws6CroZjA/exec";
     let currentData = {}, currentTab = 'Stock', activeItem = null;
 
@@ -181,8 +126,6 @@
             document.getElementById('skeleton-loader').style.display = 'none';
             document.getElementById('app').style.display = 'grid';
             render(currentData.Stock);
-        } else {
-            document.getElementById('errorOverlay').innerText = "Ошибка: Лист Stock не найден";
         }
     };
 
@@ -226,18 +169,15 @@
         const photos = (item.Фото || "").split(',').map(p => p.trim());
         const oldPrice = item.Старая_цена || item['Старая цена'];
         const isBooked = item.Статус === true || item.Статус === "TRUE";
-        const hasDiscount = !isFab && item.Скидка;
         const hasManyPhotos = photos.length > 1;
 
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
-                ${hasDiscount ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
-                ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
-                
+                ${(!isFab && item.Скидка) ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                ${isBooked ? `<div class="booked-badge ${!(!isFab && item.Скидка) ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
                 ${hasManyPhotos ? `<button class="carousel-btn prev" onclick="moveSlide(-1)">❮</button>` : ''}
                 ${hasManyPhotos ? `<button class="carousel-btn next" onclick="moveSlide(1)">❯</button>` : ''}
-                
                 <div class="carousel" id="modalCarousel" onscroll="updateDots(${photos.length})">${photos.map(p => `<img src="${p}">`).join('')}</div>
                 ${hasManyPhotos ? `<div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
             </div>
@@ -256,55 +196,62 @@
                 </div>
                 <div class="modal-desc">${esc(item.Описание)}</div>
             </div>`;
-        
         document.getElementById('productModal').style.display = 'block';
     }
 
     async function handleOrder() {
-        const isBooked = activeItem.Статус === true || activeItem.Статус === "TRUE";
-        if (isBooked) return;
-
+        if (activeItem.Статус === true || activeItem.Статус === "TRUE") return;
         tg.HapticFeedback.impactOccurred('medium');
-        
         const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest', last_name: '', username: 'none'};
         const fullName = (user.first_name + ' ' + (user.last_name || '')).trim();
         const orderID = ("0" + new Date().getDate()).slice(-2) + ("0" + (new Date().getMonth() + 1)).slice(-2) + "-" + String(user.id).slice(-3);
         
         try {
             await fetch(API_URL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ 
-                    action: "order", order_id: orderID, 
-                    item: activeItem.Название || activeItem.Название_ткани, 
-                    sku: activeItem.Артикул || activeItem.Артикул_ткани, 
-                    price: activeItem.Цена, type: currentTab, 
-                    user_id: user.id, user_name: fullName, user_username: user.username 
-                }) 
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify({ action: "order", order_id: orderID, item: activeItem.Название || activeItem.Название_ткани, sku: activeItem.Артикул || activeItem.Артикул_ткани, price: activeItem.Цена, type: currentTab, user_id: user.id, user_name: fullName, user_username: user.username }) 
             });
             document.getElementById('orderNumberLabel').innerText = "Номер: " + orderID;
             document.getElementById('successScreen').style.display = 'block';
         } catch(e) { alert("Ошибка заказа"); }
     }
 
-    /* ЛОГИКА СТРЕЛОЧЕК И ДОТСОВ */
     function updateDots(total) {
         const c = document.getElementById('modalCarousel');
+        if(!c) return;
         const idx = Math.round(c.scrollLeft / c.offsetWidth);
         document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
     }
+
     function moveSlide(direction) {
         const c = document.getElementById('modalCarousel');
-        c.scrollBy({ left: c.offsetWidth * direction, behavior: 'smooth' });
+        const total = c.children.length;
+        const current = Math.round(c.scrollLeft / c.offsetWidth);
+        let next = current + direction;
+        if (next >= total) next = 0;
+        if (next < 0) next = total - 1;
+        c.scrollTo({ left: next * c.offsetWidth, behavior: 'smooth' });
     }
 
     function closeModal() { document.getElementById('productModal').style.display = 'none'; }
+
     window.changeTab = (tab) => {
-        closeModal(); currentTab = tab;
+        closeModal();
+        currentTab = tab;
+        document.getElementById('app').innerHTML = ''; // ОЧИСТКА ЭКРАНА
+        document.getElementById('skeleton-loader').style.display = 'grid';
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById('nav-' + tab).classList.add('active');
-        render(currentData[tab]); window.scrollTo(0,0);
+        
+        if (currentData[tab]) {
+            setTimeout(() => {
+                document.getElementById('skeleton-loader').style.display = 'none';
+                render(currentData[tab]);
+            }, 150); // Легкая задержка для естественности
+        }
+        window.scrollTo(0,0);
     };
+
     init();
 </script>
 </body>
