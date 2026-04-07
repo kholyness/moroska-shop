@@ -2,30 +2,187 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Moroska Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Moroska Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { 
+            --main-color: #5d7a6d; 
+            --bg-color: #fcfcfc; 
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --text-muted: #888;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 80px; color: var(--text-main); }
+        
+        /* Сетка товаров */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; }
+        
+        /* Карточка */
+        .card { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: #eee; }
+        .card-info { padding: 10px; }
+        .card-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; height: 32px; overflow: hidden; }
+        .card-price { font-weight: bold; color: var(--main-color); font-size: 14px; }
+        
+        /* Статусы */
+        .badge { position: absolute; top: 8px; left: 8px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; color: white; z-index: 2; }
+        .badge-booked { background: #f1c40f; color: #333; }
+        .badge-sale { background: #e74c3c; }
+
+        /* Навигация */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 65px; border-top: 1px solid #eee; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #bbb; cursor: pointer; font-weight: bold; }
+        .nav-item.active { color: var(--main-color); border-top: 3px solid var(--main-color); }
+
+        /* Загрузка и ошибки */
+        #status-msg { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+        .hidden { display: none; }
+
+        /* Модалка (упрощенная для стабильности) */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding: 20px; }
+        .close-btn { position: fixed; top: 20px; right: 20px; background: #eee; border: none; padding: 10px; border-radius: 50%; width: 40px; height: 40px; font-weight: bold; }
+        .modal-img { width: 100%; border-radius: 12px; margin-bottom: 20px; }
+        .order-btn { background: var(--main-color); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; }
+        .order-btn:disabled { background: #ccc; }
+    </style>
 </head>
 <body>
-    <h1 id="status">Проверка связи...</h1>
-    <div id="output"></div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbza9U1cn6OrhGRZA8hRpNePhzDYN5CmxiSCKJ1Ad4JavJSAtTdbkySj9MsanAKhErXb/exec"; // ВСТАВЬ СВОЮ ССЫЛКУ!
+    <div id="status-msg">⏳ Загружаем витрину Moroska...</div>
 
-        async function test() {
-            const status = document.getElementById('status');
-            const output = document.getElementById('output');
+    <div id="app" class="hidden">
+        <div id="items-grid" class="grid"></div>
+    </div>
+
+    <div id="modal">
+        <button class="close-btn" onclick="closeModal()">✕</button>
+        <div id="modal-content"></div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active" id="nav-Stock" onclick="changeTab('Stock')">Наличие</div>
+        <div class="nav-item" id="nav-Catalog" onclick="changeTab('Catalog')">Каталог</div>
+        <div class="nav-item" id="nav-Fabrics" onclick="changeTab('Fabrics')">Ткани</div>
+    </div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    // --- ВАЖНО: ВСТАВЬ СВОЮ ССЫЛКУ ТУТ ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbza9U1cn6OrhGRZA8hRpNePhzDYN5CmxiSCKJ1Ad4JavJSAtTdbkySj9MsanAKhErXb/exec";
+
+    let db = {};
+    let currentTab = 'Stock';
+
+    // Загрузка данных
+    async function load() {
+        try {
+            tg.ready();
+            tg.expand();
             
-            try {
-                status.innerText = "Запрос к Google отправлен...";
-                const res = await fetch(API_URL);
-                const data = await res.json();
-                status.innerText = "✅ СВЯЗЬ ЕСТЬ!";
-                output.innerText = "Найдено листов: " + Object.keys(data).join(', ');
-            } catch (err) {
-                status.innerText = "❌ ОШИБКА: " + err.message;
-            }
+            const res = await fetch(API_URL);
+            db = await res.json();
+            
+            document.getElementById('status-msg').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            render();
+        } catch (e) {
+            document.getElementById('status-msg').innerText = "❌ Ошибка загрузки. Попробуйте обновить страницу.";
         }
-        test();
-    </script>
+    }
+
+    // Отрисовка товаров
+    function render() {
+        const grid = document.getElementById('items-grid');
+        const items = db[currentTab] || [];
+        
+        if (items.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999;">В этой категории пока ничего нет</div>';
+            return;
+        }
+
+        grid.innerHTML = items.map((item, idx) => {
+            const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
+            const photo = (item.Фото || '').split(',')[0].trim() || 'https://via.placeholder.com/300?text=Moroska';
+            
+            return `
+                <div class="card" onclick="openItem(${idx})">
+                    ${isBooked ? '<div class="badge badge-booked">ЗАБРОНИРОВАНО</div>' : ''}
+                    ${item.Скидка ? `<div class="badge badge-sale">${item.Скидка}</div>` : ''}
+                    <img src="${photo}">
+                    <div class="card-info">
+                        <div class="card-title">${item.Название || item.Название_ткани || 'Без названия'}</div>
+                        <div class="card-price">${item.Цена || ''} RSD</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Открытие товара
+    function openItem(idx) {
+        const item = db[currentTab][idx];
+        const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
+        const photos = (item.Фото || '').split(',').map(p => p.trim());
+
+        document.getElementById('modal-content').innerHTML = `
+            <img src="${photos[0]}" class="modal-img">
+            <h2>${item.Название || item.Название_ткани}</h2>
+            <p style="font-size: 20px; color: var(--main-color); font-weight: bold;">${item.Цена || ''} RSD</p>
+            <p style="white-space: pre-wrap; color: #666; line-height: 1.5;">${item.Описание || item.Описание_ткани || ''}</p>
+            ${currentTab !== 'Fabrics' ? `
+                <button class="order-btn" ${isBooked ? 'disabled' : ''} onclick="sendOrder(${idx})">
+                    ${isBooked ? 'ТОВАР ЗАБРОНИРОВАН' : (currentTab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ')}
+                </button>
+            ` : ''}
+        `;
+        document.getElementById('modal').style.display = 'block';
+    }
+
+    // Отправка заказа
+    async function sendOrder(idx) {
+        const item = db[currentTab][idx];
+        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest'};
+        const btn = document.querySelector('.order-btn');
+        
+        tg.HapticFeedback.impactOccurred('medium');
+        btn.innerText = "ОТПРАВЛЯЕМ...";
+        btn.disabled = true;
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    action: "order",
+                    item: item.Название || item.Название_ткани,
+                    price: item.Цена,
+                    user_id: user.id,
+                    user_name: user.first_name,
+                    order_id: Date.now().toString().slice(-6)
+                })
+            });
+            alert("Заказ отправлен! Мы свяжемся с вами в Telegram.");
+            closeModal();
+        } catch (e) {
+            alert("Ошибка при заказе.");
+            btn.disabled = false;
+        }
+    }
+
+    function changeTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById('nav-' + tab).classList.add('active');
+        render();
+        window.scrollTo(0,0);
+    }
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    load();
+</script>
 </body>
 </html>
