@@ -2,252 +2,100 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Moroska Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { 
-            --main-color: #5d7a6d; 
-            --main-hover: #4a6357; 
-            --bg-color: #fcfcfc; 
-            --card-bg: #ffffff;
-            --sale-color: #e74c3c; 
-            --booked-color: #f1c40f; 
-            --skeleton-bg: #f0f0f0; 
-            --text-main: #333333;
-            --text-muted: #666666;
-            --nav-inactive: #bbbbbb;
-            --transition: all 0.2s ease-in-out;
-        }
-        
-        * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
-        .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; }
-        
-        .card { 
-            background: var(--card-bg); border-radius: 18px; overflow: hidden; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; 
-            cursor: pointer; transition: var(--transition);
-        }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-        .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
-        
-        .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
-        .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
-        .booked-only { top: 10px !important; }
-
-        .card-content { padding: 12px; }
-        .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; }
-        .price-stack { display: flex; flex-direction: column; }
-        .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; line-height: 1.2; }
-        .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
-
-        #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 80px; }
-        .modal-close-btn { 
-            position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; 
-            background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; 
-            border: none; font-size: 22px; display: flex; align-items: center; justify-content: center; 
-            backdrop-filter: blur(4px); cursor: pointer; transition: var(--transition);
-        }
-
-        .carousel-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
-        .carousel::-webkit-scrollbar { display: none; }
-        .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
-        
-        .carousel-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 40px; height: 40px; background: rgba(255,255,255,0.7);
-            border-radius: 50%; border: none; font-size: 18px; color: var(--main-color);
-            display: flex; align-items: center; justify-content: center; z-index: 8; transition: var(--transition);
-        }
-
-        .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
-        .dot.active { background: var(--main-color); width: 12px; border-radius: 4px; }
-        
-        .modal-body { padding: 10px 20px 20px 20px ; max-width: 600px; margin: 0 auto; }
-        .modal-header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; gap: 15px; }
-        
-        .action-btn { 
-            background: var(--main-color); color: white; border: none; padding: 14px 24px; 
-            border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer;
-            transition: var(--transition);
-        }
-        .action-btn:disabled { background: #eee; color: #999; cursor: not-allowed; }
-
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 1100; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
-        .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
-        .nav-item.active { color: var(--main-color); }
-        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
-
-        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; text-align: center; padding-top: 120px; }
+        :root { --mc: #5d7a6d; --bg: #fcfcfc; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 15px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card-info { padding: 10px; font-size: 14px; }
+        .price { color: var(--mc); font-weight: bold; }
+        #status { padding: 20px; text-align: center; color: #666; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 60px; border-top: 1px solid #eee; }
+        .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #bbb; cursor: pointer; }
+        .nav-item.active { color: var(--mc); border-bottom: 3px solid var(--mc); }
+        #debug-log { font-size: 10px; color: red; padding: 10px; }
     </style>
 </head>
 <body>
 
-<div id="skeleton-loader" class="grid">
-    <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
-</div>
-
+<div id="status">⏳ Загрузка товаров...</div>
+<div id="debug-log"></div>
 <div id="app" class="grid" style="display:none;"></div>
 
-<div id="productModal"><div id="modalContent"></div></div>
-
-<div id="successScreen">
-    <h2 style="color:var(--main-color)">Заказ отправлен!</h2>
-    <p id="orderNumberLabel" style="font-weight:bold;"></p>
-    <button onclick="location.reload()" style="background:var(--main-color); color:white; border:none; padding:15px 40px; border-radius:14px; margin-top:20px; cursor:pointer;">ОТЛИЧНО</button>
-</div>
-
 <div class="nav">
-    <div class="nav-item active" id="nav-Stock" onclick="changeTab('Stock')">Наличие</div>
-    <div class="nav-item" id="nav-Catalog" onclick="changeTab('Catalog')">Каталог</div>
-    <div class="nav-item" id="nav-Fabrics" onclick="changeTab('Fabrics')">Ткани</div>
+    <div class="nav-item active" onclick="changeTab('Stock', this)">Наличие</div>
+    <div class="nav-item" onclick="changeTab('Catalog', this)">Каталог</div>
+    <div class="nav-item" onclick="changeTab('Fabrics', this)">Ткани</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    // --- ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ GOOGLE SCRIPTS ---
+    // --- ТВОЯ ССЫЛКА НИЖЕ ---
     const API_URL = "https://script.google.com/macros/s/AKfycbza9U1cn6OrhGRZA8hRpNePhzDYN5CmxiSCKJ1Ad4JavJSAtTdbkySj9MsanAKhErXb/exec";
-    
-    let currentData = {}, currentTab = 'Stock', activeItem = null;
 
-    const esc = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let fullData = {};
 
-    function render(items) {
-        const app = document.getElementById('app');
-        if (!items || items.length === 0) {
-            app.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #999;">Тут пока пусто...</div>';
-            return;
-        }
-        app.innerHTML = items.map((item, index) => {
-            const isFab = currentTab === 'Fabrics';
-            const title = isFab ? item.Название_ткани : item.Название;
-            const photo = (item.Фото || "").split(',')[0].trim();
-            const oldPrice = item.Старая_цена || item['Старая цена'];
-            const isBooked = item.Статус === true || item.Статус === "TRUE" || item.Статус === "TRUE ";
-            const hasDiscount = !isFab && item.Скидка;
-            
-            return `
-                <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${hasDiscount ? `<div class="sale-badge">${esc(item.Sкидка || item.Скидка)}</div>` : ''}
-                    ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
-                    <img src="${photo || 'https://via.placeholder.com/300x375?text=Moroska'}">
-                    <div class="card-content">
-                        <div class="card-title">${esc(title)}</div>
-                        <div class="price-stack">
-                            ${(!isFab && oldPrice) ? `<span class="old-p">${esc(oldPrice)}</span>` : ''}
-                            ${!isFab ? `<span class="card-price">${esc(item.Цена)} RSD</span>` : '<span style="font-size:10px;color:#999;">Ткань</span>'}
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
+    function log(msg) {
+        document.getElementById('debug-log').innerText += msg + "\n";
     }
 
     async function init() {
-        tg.ready(); 
+        tg.ready();
         tg.expand();
+        log("Запуск скрипта...");
+
+        if (API_URL.includes("ВСТАВЬ_СЮДА")) {
+            document.getElementById('status').innerText = "❌ Ошибка: Вы не вставили ссылку API_URL в коде GitHub!";
+            return;
+        }
+
         try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            currentData = data;
+            log("Запрос к Google Scripts...");
+            const res = await fetch(API_URL);
+            if (!res.ok) throw new Error("Сервер ответил ошибкой: " + res.status);
             
-            document.getElementById('skeleton-loader').style.display = 'none';
+            fullData = await res.json();
+            log("Данные получены!");
+
+            document.getElementById('status').style.display = 'none';
             document.getElementById('app').style.display = 'grid';
             
-            if (currentData[currentTab]) {
-                render(currentData[currentTab]);
-            }
+            render('Stock');
         } catch (err) {
-            console.error("Load error:", err);
-            document.getElementById('skeleton-loader').innerHTML = '<p style="padding:20px;">Ошибка загрузки данных. Попробуйте обновить страницу.</p>';
+            log("КРИТИЧЕСКАЯ ОШИБКА: " + err.message);
+            document.getElementById('status').innerText = "❌ Ошибка загрузки данных";
         }
     }
 
-    function openProduct(tab, index) {
-        const item = currentData[tab][index];
-        activeItem = item;
-        const isFab = tab === 'Fabrics';
-        const photos = (item.Фото || "").split(',').map(p => p.trim()).filter(p => p !== "");
-        const oldPrice = item.Старая_цена || item['Старая цена'];
-        const isBooked = item.Статус === true || item.Статус === "TRUE";
-        const hasManyPhotos = photos.length > 1;
-
-        document.getElementById('modalContent').innerHTML = `
-            <div class="carousel-wrapper">
-                <button class="modal-close-btn" onclick="closeModal()">✕</button>
-                ${photos.length > 0 ? `
-                    <div class="carousel" id="modalCarousel" onscroll="updateDots(${photos.length})">
-                        ${photos.map(p => `<img src="${p}">`).join('')}
-                    </div>
-                ` : '<img src="https://via.placeholder.com/300x375?text=No+Photo">'}
-                ${hasManyPhotos ? `<div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
-            </div>
-            <div class="modal-body">
-                <h2 style="font-size:18px;margin:0 0 15px 0;">${esc(item.Название || item.Название_ткани)}</h2>
-                <div class="modal-header-row">
-                    <div class="price-stack">
-                        ${(!isFab && oldPrice) ? `<span class="old-p" style="font-size:14px;">${esc(oldPrice)}</span>` : ''}
-                        ${!isFab ? `<span class="card-price" style="font-size:22px;">${esc(item.Цена)} RSD</span>` : ''}
-                    </div>
-                    ${!isFab ? `
-                        <button class="action-btn" ${isBooked ? 'disabled' : ''} onclick="handleOrder()">
-                            ${isBooked ? 'ЗАБРОНИРОВАНО' : (tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ')}
-                        </button>
-                    ` : ''}
-                </div>
-                <div style="line-height:1.6; color:#666; font-size:14px; white-space:pre-wrap;">${esc(item.Описание || item.Описание_ткани)}</div>
-            </div>`;
-        document.getElementById('productModal').style.display = 'block';
-    }
-
-    async function handleOrder() {
-        tg.HapticFeedback.impactOccurred('medium');
-        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest', username: 'none'};
-        const orderID = ("0" + new Date().getDate()).slice(-2) + ("0" + (new Date().getMonth() + 1)).slice(-2) + "-" + String(user.id).slice(-3);
+    function render(tab) {
+        const app = document.getElementById('app');
+        const items = fullData[tab] || [];
         
-        const btn = document.querySelector('.action-btn');
-        btn.innerText = "ОТПРАВКА...";
-        btn.disabled = true;
-
-        try {
-            await fetch(API_URL, { 
-                method: 'POST', mode: 'no-cors',
-                body: JSON.stringify({ 
-                    action: "order", order_id: orderID, 
-                    item: activeItem.Название || activeItem.Название_ткани, 
-                    sku: activeItem.Артикул || activeItem.Артикул_ткани, 
-                    price: activeItem.Цена, type: currentTab, 
-                    user_id: user.id, user_name: user.first_name, user_username: user.username 
-                }) 
-            });
-            document.getElementById('orderNumberLabel').innerText = "Номер: " + orderID;
-            document.getElementById('successScreen').style.display = 'block';
-        } catch(e) {
-            alert("Ошибка связи со скриптом");
-            btn.disabled = false;
+        if (items.length === 0) {
+            app.innerHTML = '<p style="grid-column:1/-1; text-align:center;">В этой категории пусто</p>';
+            return;
         }
+
+        app.innerHTML = items.map(item => `
+            <div class="card">
+                <img src="${(item.Фото || '').split(',')[0].trim() || 'https://via.placeholder.com/150'}">
+                <div class="card-info">
+                    <div>${item.Название || item.Название_ткани || 'Без имени'}</div>
+                    <div class="price">${item.Цена || ''} RSD</div>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function closeModal() { document.getElementById('productModal').style.display = 'none'; }
-
-    function updateDots(total) {
-        const c = document.getElementById('modalCarousel');
-        if (!c) return;
-        const idx = Math.round(c.scrollLeft / c.offsetWidth);
-        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    function changeTab(tab, el) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        render(tab);
     }
-
-    window.changeTab = (tab) => {
-        currentTab = tab;
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('nav-' + tab).classList.add('active');
-        render(currentData[tab]);
-        window.scrollTo(0,0);
-    };
 
     init();
 </script>
