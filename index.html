@@ -7,37 +7,22 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { 
-            --main-color: #5d7a6d; 
-            --main-hover: #4a6357; 
-            --bg-color: #fcfcfc; 
-            --card-bg: #ffffff;
-            --sale-color: #e74c3c; 
-            --booked-color: #f1c40f; 
-            --skeleton-bg: #f0f0f0; 
-            --text-main: #333333;
-            --text-muted: #666666;
-            --nav-inactive: #bbbbbb;
+            --main-color: #5d7a6d; --main-hover: #4a6357; --bg-color: #fcfcfc; 
+            --card-bg: #ffffff; --sale-color: #e74c3c; --booked-color: #f1c40f; 
+            --skeleton-bg: #f0f0f0; --text-main: #333333; --nav-inactive: #bbbbbb;
             --transition: all 0.2s ease-in-out;
         }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); }
         
-        * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); overflow-x: hidden; }
-        
-        /* Сетка и Скелетоны */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto; }
-        .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; animation: pulse 1.5s infinite ease-in-out; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
-        /* Карточки */
-        .card { 
-            background: var(--card-bg); border-radius: 18px; overflow: hidden; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; 
-            cursor: pointer; transition: var(--transition);
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; }
+        .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .card { background: var(--card-bg); border-radius: 18px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; cursor: pointer; transition: var(--transition); }
         .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
-        
-        /* Плашки */
+
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
         .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
         .booked-only { top: 10px !important; }
@@ -46,51 +31,32 @@
         .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; }
         .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; }
 
-        /* Модальное окно */
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 100px; }
-        .modal-close-btn { 
-            position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; 
-            background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; 
-            border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);
-        }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 
-        /* Карусель */
         .carousel-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
-        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+        .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
-        
-        .carousel-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 40px; height: 40px; background: rgba(255,255,255,0.7);
-            border-radius: 50%; border: none; font-size: 18px; color: var(--main-color);
-            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 8;
-        }
-        .carousel-btn.prev { left: 15px; }
-        .carousel-btn.next { right: 15px; }
-
-        .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; transition: var(--transition); }
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(0,0,0,0.2); border: none; color: white; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 20px; }
+        .carousel-btn.prev { left: 10px; }
+        .carousel-btn.next { right: 10px; }
+        .dots { display: flex; justify-content: center; gap: 5px; padding: 10px; }
+        .dot { width: 6px; height: 6px; background: #ddd; border-radius: 50%; }
         .dot.active { background: var(--main-color); width: 12px; border-radius: 4px; }
-        
-        /* Тело модалки */
+
         .modal-body { padding: 20px; max-width: 600px; margin: 0 auto; }
         .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        
-        .action-btn { 
-            background: var(--main-color); color: white; border: none; padding: 14px 24px; 
-            border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: var(--transition);
-        }
-        .action-btn:hover { background: var(--main-hover); transform: scale(1.03); }
+        .action-btn { background: var(--main-color); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: var(--transition); }
+        .action-btn:hover { transform: scale(1.05); background: var(--main-hover); }
         .action-btn:disabled { background: #eee; color: #999; cursor: not-allowed; transform: none; }
 
-        /* Навигация (Всегда сверху) */
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 2000; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
-        .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; transition: var(--transition); position: relative; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
         .nav-item.active { color: var(--main-color); }
         .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
 
-        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 3000; text-align: center; padding-top: 120px; }
+        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 3000; text-align: center; padding-top: 100px; }
     </style>
 </head>
 <body>
@@ -107,8 +73,8 @@
 </div>
 
 <div id="successScreen">
-    <h2 style="color:var(--main-color)">Заказ отправлен!</h2>
-    <p id="orderNumberLabel"></p>
+    <h1 style="color:var(--main-color)">Заказ отправлен!</h1>
+    <p id="orderNumberLabel" style="font-weight:bold; font-size:20px;"></p>
     <button onclick="location.reload()" class="action-btn" style="margin-top:20px;">ОТЛИЧНО</button>
 </div>
 
@@ -120,7 +86,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbza9U1cn6OrhGRZA8hRpNePhzDYN5CmxiSCKJ1Ad4JavJSAtTdbkySj9MsanAKhErXb/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzyBWDlFZchFr-nCxfn4jd8k-H50QbXocXZ8YnfG1tMZDW-oXlpBVNh5Ty4fzYP9eyTfg/exec"; 
     
     let currentData = {}, currentTab = 'Stock';
 
@@ -134,7 +100,7 @@
             document.getElementById('skeleton-loader').style.display = 'none';
             document.getElementById('app').style.display = 'grid';
             render();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Load error:", e); }
     }
 
     function render() {
@@ -193,31 +159,45 @@
 
     async function handleOrder(idx) {
         const item = currentData[currentTab][idx];
-        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest'};
-        tg.HapticFeedback.impactOccurred('medium');
+        const user = tg.initDataUnsafe.user || {id: 266696995, first_name: 'Guest', username: 'none'};
         
+        const now = new Date();
+        const orderID = ("0" + now.getDate()).slice(-2) + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + String(user.id).slice(-3);
+        const fullName = (user.first_name + ' ' + (user.last_name || '')).trim();
+
+        tg.HapticFeedback.impactOccurred('medium');
+        const btn = document.querySelector('.action-btn');
+        btn.innerText = "ОТПРАВКА...";
+        btn.disabled = true;
+
         try {
             await fetch(API_URL, {
                 method: 'POST', mode: 'no-cors',
                 body: JSON.stringify({
-                    action: "order", item: item.Название || item.Название_ткани,
-                    price: item.Цена, user_id: user.id, user_name: user.first_name,
-                    order_id: Math.random().toString(36).substr(2, 6).toUpperCase()
+                    action: "order", order_id: orderID,
+                    item: item.Название || item.Название_ткани,
+                    sku: item.Артикул || item.Артикул_ткани || "—",
+                    price: item.Цена, type: currentTab,
+                    user_id: user.id, user_name: fullName, user_username: user.username
                 })
             });
             document.getElementById('productModal').style.display = 'none';
+            document.getElementById('orderNumberLabel').innerText = "ЗАКАЗ №" + orderID;
             document.getElementById('successScreen').style.display = 'block';
-        } catch(e) { alert("Ошибка заказа"); }
+        } catch(e) { 
+            alert("Ошибка сети"); 
+            btn.innerText = "КУПИТЬ";
+            btn.disabled = false;
+        }
     }
 
     function moveSlide(dir) {
         const c = document.getElementById('modalCarousel');
         const width = c.offsetWidth;
-        let newScroll = c.scrollLeft + (dir * width);
-        // Цикличность
-        if (newScroll < 0) newScroll = c.scrollWidth - width;
-        else if (newScroll >= c.scrollWidth) newScroll = 0;
-        c.scrollTo({ left: newScroll, behavior: 'smooth' });
+        let nextPos = c.scrollLeft + (dir * width);
+        if (nextPos < 0) nextPos = c.scrollWidth - width;
+        else if (nextPos >= c.scrollWidth) nextPos = 0;
+        c.scrollTo({ left: nextPos, behavior: 'smooth' });
     }
 
     function updateDots(total) {
