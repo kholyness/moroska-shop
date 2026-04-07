@@ -30,6 +30,19 @@
         .card-content { padding: 12px; }
         .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; }
         .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; }
+        .price-stack { display: flex; flex-direction: column; }
+        .old-p { 
+            text-decoration: line-through; 
+            color: #aaa; 
+            font-size: 11px; 
+            margin-bottom: 2px; 
+        }
+        .modal-old-p { 
+            text-decoration: line-through; 
+            color: #aaa; 
+            font-size: 14px; 
+            display: block;
+        }
 
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 100px; }
         .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
@@ -110,6 +123,7 @@
             const isFab = currentTab === 'Fabrics';
             const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
             const photo = (item.Фото || "").split(',')[0].trim() || 'https://via.placeholder.com/300';
+            const oldPrice = item.Старая_цена || item['Старая цена'];
             const hasDiscount = !isFab && item.Скидка;
 
             return `
@@ -130,6 +144,8 @@
         const isFab = currentTab === 'Fabrics';
         const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
         const photos = (item.Фото || "").split(',').map(p => p.trim()).filter(p => p);
+        const oldPrice = item.Старая_цена || item['Старая цена'];
+        const hasDiscount = !isFab && item.Скидка;
         
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
