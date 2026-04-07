@@ -4,37 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Moroska Store</title>
+    <link rel="preconnect" href="https://script.google.com">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { 
             --main-color: #5d7a6d; --main-hover: #4a6357; --bg-color: #fcfcfc; 
             --card-bg: #ffffff; --sale-color: #e74c3c; --booked-color: #f1c40f; 
-            --skeleton-bg: #f0f0f0; --text-main: #333333; --nav-inactive: #bbbbbb;
-            --transition: all 0.2s ease-in-out;
+            --new-color: #7da0b0; --skeleton-bg: #f0f0f0; --text-main: #333333; 
+            --nav-inactive: #bbbbbb; --transition: all 0.2s ease-in-out;
         }
+        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); overflow-x: hidden; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; }
+        
         .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        .card { background: var(--card-bg); border-radius: 18px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; cursor: pointer; transition: var(--transition); }
+        
+        .card { 
+            background: var(--card-bg); border-radius: 18px; overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; 
+            cursor: pointer; transition: var(--transition);
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
         .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
-
+        
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
         .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
         .booked-only { top: 10px !important; }
+        .new-badge { position: absolute; bottom: 10px; right: 10px; background: var(--new-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
 
-        .card-content { padding: 12px; }
-        .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; }
-        
-        /* Стили цен */
-        .price-stack { display: flex; flex-direction: column; }
-        .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; }
+        .card-content { padding: 6px 8px 10px 8px; /* Уменьшили верхний и нижний отступы */ }
+        .card-title { font-size: 11px; font-weight: 500; line-height: 1.2; margin-bottom: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .card-price { font-weight: 700; color: var(--main-color); font-size: 13px; line-height: 1; }
         .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
-        .modal-old-p { text-decoration: line-through; color: #aaa; font-size: 14px; display: block; }
 
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 100px; }
         .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
@@ -43,25 +50,23 @@
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
-        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(0,0,0,0.2); border: none; color: white; border-radius: 50%; cursor: pointer; z-index: 10; font-size: 20px; }
+        
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(0,0,0,0.2); border-radius: 50%; border: none; color: white; cursor: pointer; z-index: 8; }
         .carousel-btn.prev { left: 10px; }
         .carousel-btn.next { right: 10px; }
-        .dots { display: flex; justify-content: center; gap: 5px; padding: 10px; }
-        .dot { width: 6px; height: 6px; background: #ddd; border-radius: 50%; }
+        .dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
         .dot.active { background: var(--main-color); width: 12px; border-radius: 4px; }
-
-        .modal-body { padding: 20px; max-width: 600px; margin: 0 auto; }
-        .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .action-btn { background: var(--main-color); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: var(--transition); }
-        .action-btn:hover { transform: scale(1.05); background: var(--main-hover); }
-        .action-btn:disabled { background: #eee; color: #999; cursor: not-allowed; transform: none; }
+        
+        .modal-body { padding: 10px 14px 14px; max-width: 600px; margin: 0 auto; }
+        .action-btn { background: var(--main-color); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+        .action-btn:hover { transform: scale(1.02); }
+        .action-btn:disabled { background: #eee; color: #999; cursor: not-allowed; }
 
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
         .nav-item.active { color: var(--main-color); }
         .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
-
-        #successScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 3000; text-align: center; padding-top: 100px; }
     </style>
 </head>
 <body>
@@ -77,10 +82,16 @@
     <div id="modalContent"></div>
 </div>
 
-<div id="successScreen">
-    <h1 style="color:var(--main-color)">Заказ отправлен!</h1>
-    <p id="orderNumberLabel" style="font-weight:bold; font-size:20px;"></p>
-    <button onclick="location.reload()" class="action-btn" style="margin-top:20px;">ОТЛИЧНО</button>
+<div id="successScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(252, 252, 252, 0.98); z-index:3000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--card-bg); width:100%; max-width:350px; padding:40px 25px; border-radius:24px; box-shadow:0 15px 35px rgba(0,0,0,0.07); text-align:center;">
+        <img src="assets/logo_op.webp" alt="Moroska" style="max-width: 90px; height: auto; margin: 0 auto 25px auto; display: block; opacity: 0.6;">
+        <h1 style="color:var(--main-color); font-size:24px; margin:0 0 10px 0;">Заказ отправлен!</h1>
+        <p id="orderNumberLabel" style="font-weight:700; font-size:18px; color:var(--text-main); margin-bottom:15px;"></p>
+        <p style="font-size:14px; color:#666; line-height:1.6; margin-bottom:30px;">
+            Я уже получила ваш заказ и скоро свяжусь в Telegram для уточнения деталей
+        </p>
+        <button onclick="location.reload()" class="action-btn" style="width:100%; padding:15px; border-radius:14px;">ОТЛИЧНО</button>
+    </div>
 </div>
 
 <div class="nav">
@@ -91,21 +102,43 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbzyBWDlFZchFr-nCxfn4jd8k-H50QbXocXZ8YnfG1tMZDW-oXlpBVNh5Ty4fzYP9eyTfg/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzYqif1xfiOqInvdeMhzCLcNyAY-uvxEyfLxW2ZwNmJOdK1io80aRIGEmHDsLiuYRKkkw/exec";
+    const CACHE_KEY = "moroska_data_v1";
     
     let currentData = {}, currentTab = 'Stock';
-
-    const esc = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     async function init() {
         tg.ready(); tg.expand();
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            try { currentData = JSON.parse(cached); showApp(); render(); } catch(e) {}
+        }
         try {
             const res = await fetch(API_URL);
-            currentData = await res.json();
-            document.getElementById('skeleton-loader').style.display = 'none';
-            document.getElementById('app').style.display = 'grid';
-            render();
-        } catch (e) { console.error("Load error:", e); }
+            const fresh = await res.json();
+            if (JSON.stringify(fresh) !== JSON.stringify(currentData)) {
+                currentData = fresh;
+                localStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
+                showApp(); render();
+            }
+        } catch(e) { if (!cached) alert("Ошибка загрузки данных"); }
+    }
+
+    function showApp() {
+        document.getElementById('skeleton-loader').style.display = 'none';
+        document.getElementById('app').style.display = 'grid';
+    }
+
+    function renderBadges(item, isFab, isBooked, isNew) {
+        // порядок снизу вверх: ЗАБРОНИРОВАНО → НОВОЕ → скидка
+        const list = [];
+        if (isBooked) list.push({ cls: 'booked-badge', text: 'ЗАБРОНИРОВАНО' });
+        if (isNew) list.push({ cls: 'new-badge', text: 'НОВОЕ' });
+        if (item.Скидка && !isFab) list.push({ cls: 'sale-badge', text: esc(item.Скидка) });
+        return list.map((b, i) =>
+            `<div class="${b.cls}" style="position:absolute;bottom:${10 + i * 28}px;right:10px;left:auto;top:auto;">${b.text}</div>`
+        ).join('');
     }
 
     function render() {
@@ -113,16 +146,17 @@
         const items = currentData[currentTab] || [];
         app.innerHTML = items.map((item, idx) => {
             const isFab = currentTab === 'Fabrics';
-            const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
+            const isBooked = String(item.Статус).toUpperCase().trim() === 'TRUE';
+            const isNew = String(item.Новое).toUpperCase().trim() === 'TRUE';
             const photo = (item.Фото || "").split(',')[0].trim() || 'https://via.placeholder.com/300';
             const oldPrice = item.Старая_цена || item['Старая цена'];
-            const hasDiscount = !isFab && item.Скидка;
 
             return `
                 <div class="card" onclick="openProduct(${idx})">
-                    ${hasDiscount ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
-                    ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
-                    <img src="${photo}">
+                    ${item.Скидка && !isFab ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                    ${isBooked ? `<div class="booked-badge ${!item.Скидка ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
+                    ${isNew ? `<div class="new-badge">НОВОЕ</div>` : ''}
+                    <img src="${photo}" loading="lazy">
                     <div class="card-content">
                         <div class="card-title">${esc(item.Название || item.Название_ткани)}</div>
                         ${!isFab ? `
@@ -139,31 +173,29 @@
     function openProduct(idx) {
         const item = currentData[currentTab][idx];
         const isFab = currentTab === 'Fabrics';
-        const isBooked = item.Статус === true || String(item.Статус).toUpperCase().trim() === 'TRUE';
+        const isBooked = String(item.Статус).toUpperCase().trim() === 'TRUE';
+        const isNew = String(item.Новое).toUpperCase().trim() === 'TRUE';
         const photos = (item.Фото || "").split(',').map(p => p.trim()).filter(p => p);
-        const oldPrice = item.Старая_цена || item['Старая цена'];
-        const hasDiscount = !isFab && item.Скидка;
-        
+
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
-                <div class="carousel" id="modalCarousel" onscroll="updateDots(${photos.length})">
+                <div class="carousel" id="modalCarousel" onscroll="updateDots()">
                     ${photos.map(p => `<img src="${p}">`).join('')}
                 </div>
-                ${hasDiscount ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
-                ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
                 ${photos.length > 1 ? `
                     <button class="carousel-btn prev" onclick="moveSlide(-1)">❮</button>
                     <button class="carousel-btn next" onclick="moveSlide(1)">❯</button>
                     <div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>
                 ` : ''}
+                ${renderBadges(item, isFab, isBooked, isNew)}
             </div>
             <div class="modal-body">
-                <h2 style="font-size:18px;margin:0 0 15px 0;">${esc(item.Название || item.Название_ткани)}</h2>
-                <div class="modal-header-row">
+                <h2 style="font-size:18px;margin:0 0 8px 0;">${esc(item.Название || item.Название_ткани)}</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     ${!isFab ? `
-                        <div class="price-stack">
-                            ${oldPrice ? `<span class="modal-old-p">${esc(oldPrice)}</span>` : ''}
-                            <div class="card-price" style="font-size:22px;">${esc(item.Цена)} RSD</div>
+                        <div>
+                            ${(item.Старая_цена || item['Старая цена']) ? `<span style="text-decoration:line-through;color:#aaa;font-size:14px;">${esc(item.Старая_цена || item['Старая цена'])}</span>` : ''}
+                            <div style="color:var(--main-color);font-weight:700;font-size:22px;">${esc(item.Цена)} RSD</div>
                         </div>
                         <button class="action-btn" ${isBooked ? 'disabled' : ''} onclick="handleOrder(${idx})">
                             ${isBooked ? 'ЗАБРОНИРОВАНО' : (currentTab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ')}
@@ -177,15 +209,13 @@
 
     async function handleOrder(idx) {
         const item = currentData[currentTab][idx];
-        const user = tg.initDataUnsafe.user || {id: 266696995, first_name: 'Guest', username: 'none'};
+        const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Guest'};
         const now = new Date();
         const orderID = ("0" + now.getDate()).slice(-2) + ("0" + (now.getMonth() + 1)).slice(-2) + "-" + String(user.id).slice(-3);
-        const fullName = (user.first_name + ' ' + (user.last_name || '')).trim();
-
+        
         tg.HapticFeedback.impactOccurred('medium');
         const btn = document.querySelector('.action-btn');
-        btn.innerText = "ОТПРАВКА...";
-        btn.disabled = true;
+        btn.innerText = "ОТПРАВКА..."; btn.disabled = true;
 
         try {
             await fetch(API_URL, {
@@ -194,30 +224,23 @@
                     action: "order", order_id: orderID,
                     item: item.Название || item.Название_ткани,
                     sku: item.Артикул || item.Артикул_ткани || "—",
-                    price: item.Цена, type: currentTab,
-                    user_id: user.id, user_name: fullName, user_username: user.username
+                    price: item.Цена, user_id: user.id, 
+                    user_name: user.first_name + ' ' + (user.last_name || ''),
+                    user_username: user.username
                 })
             });
             document.getElementById('productModal').style.display = 'none';
             document.getElementById('orderNumberLabel').innerText = "ЗАКАЗ №" + orderID;
-            document.getElementById('successScreen').style.display = 'block';
-        } catch(e) { 
-            alert("Ошибка сети"); 
-            btn.innerText = "КУПИТЬ";
-            btn.disabled = false;
-        }
+            document.getElementById('successScreen').style.display = 'flex';
+        } catch(e) { alert("Ошибка сети"); btn.innerText = "КУПИТЬ"; btn.disabled = false; }
     }
 
     function moveSlide(dir) {
         const c = document.getElementById('modalCarousel');
-        const width = c.offsetWidth;
-        let nextPos = c.scrollLeft + (dir * width);
-        if (nextPos < 0) nextPos = c.scrollWidth - width;
-        else if (nextPos >= c.scrollWidth) nextPos = 0;
-        c.scrollTo({ left: nextPos, behavior: 'smooth' });
+        c.scrollTo({ left: c.scrollLeft + (dir * c.offsetWidth), behavior: 'smooth' });
     }
 
-    function updateDots(total) {
+    function updateDots() {
         const c = document.getElementById('modalCarousel');
         const idx = Math.round(c.scrollLeft / c.offsetWidth);
         document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
@@ -227,12 +250,11 @@
         currentTab = tab;
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('nav-' + tab).classList.add('active');
-        closeModal();
-        render();
+        closeModal(); render();
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
     function closeModal() { document.getElementById('productModal').style.display = 'none'; }
-
     init();
 </script>
 </body>
