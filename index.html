@@ -6,21 +6,30 @@
     <title>Moroska Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-color: #5d7a6d; --bg-color: #fcfcfc; --sale-color: #e74c3c; --skeleton-bg: #f0f0f0; }
+        :root { --main-color: #5d7a6d; --bg-color: #fcfcfc; --sale-color: #e74c3c; --booked-color: #f1c40f; --skeleton-bg: #f0f0f0; }
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 100px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; }
         .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; }
         .card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
         .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
+        
+        /* Плашки */
         .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
+        .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
+        /* Если скидки нет, поднимаем бронь выше */
+        .booked-only { top: 10px !important; }
+
         .card-content { padding: 10px; }
         .card-title { font-size: 13px; font-weight: 500; height: 34px; overflow: hidden; margin-bottom: 8px; color: #333; }
         .card-footer { display: flex; justify-content: space-between; align-items: flex-end; }
         .price-stack { display: flex; flex-direction: column; }
         .card-price { font-weight: 700; color: var(--main-color); font-size: 14px; line-height: 1.2; }
         .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
+        
         .buy-btn-sm { background: var(--main-color); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .btn-booked { background: #ccc !important; color: #666 !important; cursor: not-allowed; }
+
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; }
         .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; background: rgba(255,255,255,0.7); border-radius: 50%; z-index: 1010; border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .carousel-wrapper { position: relative; width: 100%; }
@@ -57,7 +66,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // ЗАМЕНИ НА СВОЮ ССЫЛКУ ИЗ GOOGLE SCRIPTS
+    // Твоя ссылка
     const API_URL = "https://script.google.com/macros/s/AKfycbycxVPLnvyw89_Z_VutfDtYGss_PoVm-j-D7xT4lljYCqST7Be1yXxREZ_5Gws6CroZjA/exec";
     let currentData = {}, currentTab = 'Stock', activeItem = null;
 
@@ -89,10 +98,13 @@
             const title = isFab ? item.Название_ткани : item.Название;
             const photo = (item.Фото || "").split(',')[0].trim();
             const oldPrice = item.Старая_цена || item['Старая цена'];
+            const isBooked = item.Статус === true || item.Статус === "TRUE";
+            const hasDiscount = !isFab && item.Скидка;
             
             return `
                 <div class="card" onclick="openProduct('${currentTab}', ${index})">
-                    ${(!isFab && item.Скидка) ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                    ${hasDiscount ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                    ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
                     <img src="${photo}">
                     <div class="card-content">
                         <div class="card-title">${esc(title)}</div>
@@ -101,7 +113,10 @@
                                 ${(!isFab && oldPrice) ? `<span class="old-p">${esc(oldPrice)}</span>` : ''}
                                 ${!isFab ? `<span class="card-price">${esc(item.Цена)} RSD</span>` : '<span style="font-size:10px;color:#999;">Ткань</span>'}
                             </div>
-                            ${!isFab ? `<button class="buy-btn-sm">ЗАКАЗ</button>` : ''}
+                            ${!isFab ? `
+                                <button class="buy-btn-sm ${isBooked ? 'btn-booked' : ''}" onclick="event.stopPropagation(); if(!${isBooked}) openProduct('${currentTab}', ${index})">
+                                    ${isBooked ? 'ЗАБРОНИРОВАНО' : 'ЗАКАЗ'}
+                                </button>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -114,11 +129,14 @@
         const isFab = tab === 'Fabrics';
         const photos = (item.Фото || "").split(',').map(p => p.trim());
         const oldPrice = item.Старая_цена || item['Старая цена'];
+        const isBooked = item.Статус === true || item.Статус === "TRUE";
+        const hasDiscount = !isFab && item.Скидка;
 
         document.getElementById('modalContent').innerHTML = `
             <div class="carousel-wrapper">
                 <button class="modal-close-btn" onclick="closeModal()">✕</button>
-                ${(!isFab && item.Скидка) ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                ${hasDiscount ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                ${isBooked ? `<div class="booked-badge ${!hasDiscount ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
                 <div class="carousel" id="modalCarousel" onscroll="updateDots(${photos.length})">${photos.map(p => `<img src="${p}">`).join('')}</div>
                 ${photos.length > 1 ? `<div class="dots">${photos.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : ''}
             </div>
@@ -132,9 +150,15 @@
                 ` : ''}
                 <div class="modal-desc">${esc(item.Описание)}</div>
             </div>`;
+        
         document.getElementById('productModal').style.display = 'block';
+        
         if (!isFab) {
-            tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ').show();
+            if (isBooked) {
+                tg.MainButton.setText('ЗАБРОНИРОВАНО').setParams({ color: '#cccccc', text_color: '#666666' }).disable().show();
+            } else {
+                tg.MainButton.setText(tab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ ПОШИВ').setParams({ color: '#5d7a6d', text_color: '#ffffff' }).enable().show();
+            }
         } else {
             tg.MainButton.hide();
         }
