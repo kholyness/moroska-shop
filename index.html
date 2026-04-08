@@ -8,22 +8,45 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { 
-            --main-color: #5d7a6d; --main-hover: #4a6357; --bg-color: #fcfcfc; 
+            --main-color: #5d7a6d; --main-hover: #4a6357; --bg-color: #faf8f5;
             --card-bg: #ffffff; --sale-color: #e74c3c; --booked-color: #f1c40f; 
             --new-color: #7da0b0; --skeleton-bg: #f0f0f0; --text-main: #333333; 
             --nav-inactive: #bbbbbb; --transition: all 0.2s ease-in-out;
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-color); margin: 0; padding-bottom: 90px; color: var(--text-main); overflow-x: hidden; }
+        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); background-image: repeating-linear-gradient(45deg, rgba(140,120,90,0.035) 0px, rgba(140,120,90,0.035) 1px, transparent 1px, transparent 5px), repeating-linear-gradient(-45deg, rgba(140,120,90,0.035) 0px, rgba(140,120,90,0.035) 1px, transparent 1px, transparent 5px); margin: 0; padding-bottom: 90px; color: var(--text-main); overflow-x: hidden; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 12px; }
         
         .skeleton { background: var(--skeleton-bg); border-radius: 18px; aspect-ratio: 4/5; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        #loading-banner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 16px 4px;
+            animation: fadeInDown 0.4s ease;
+        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        #loading-banner .loading-spinner {
+            width: 28px; height: 28px;
+            border: 3px solid var(--skeleton-bg);
+            border-top-color: var(--main-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-banner .loading-text {
+            font-size: 14px;
+            color: #999;
+            letter-spacing: 0.01em;
+        }
         
         .card { 
-            background: var(--card-bg); border-radius: 18px; overflow: hidden; 
+            background: var(--card-bg); border-radius: 10px; overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.03); position: relative; 
             cursor: pointer; transition: var(--transition);
             animation: fadeIn 0.4s ease-out;
@@ -31,22 +54,27 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
-        .card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block; }
-        
-        .sale-badge { position: absolute; top: 10px; left: 10px; background: var(--sale-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
-        .booked-badge { position: absolute; top: 38px; left: 10px; background: var(--booked-color); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; z-index: 4; }
-        .booked-only { top: 10px !important; }
-        .new-badge { position: absolute; bottom: 10px; right: 10px; background: var(--new-color); color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; z-index: 5; }
+        .card-img-wrap { position: relative; overflow: hidden; }
+        .card img { width: 100%; aspect-ratio: 5/6; object-fit: cover; display: block; }
 
-        .card-content { padding: 6px 8px 10px 8px; /* Уменьшили верхний и нижний отступы */ }
-        .card-title { font-size: 11px; font-weight: 500; line-height: 1.2; margin-bottom: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .card-price { font-weight: 700; color: var(--main-color); font-size: 13px; line-height: 1; }
-        .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; margin-bottom: 2px; }
+        .sale-badge { position: absolute; bottom: 6px; left: 6px; background: var(--sale-color); color: white; padding: 3px 8px; border-radius: 7px; font-size: 10px; font-weight: 800; z-index: 5; }
+        .new-badge { position: absolute; left: 6px; background: var(--new-color); color: white; padding: 3px 8px; border-radius: 7px; font-size: 10px; font-weight: 800; z-index: 5; }
+        .booked-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.32); display: flex; align-items: center; justify-content: center; z-index: 6; }
+        .booked-overlay span { color: white; font-size: 17px; font-weight: 900; letter-spacing: 3px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+
+        .modal-sale-badge { position: absolute; bottom: 10px; left: 10px; background: var(--sale-color); color: white; padding: 5px 12px; border-radius: 9px; font-size: 13px; font-weight: 800; z-index: 5; }
+        .modal-new-badge { position: absolute; left: 10px; background: var(--new-color); color: white; padding: 5px 12px; border-radius: 9px; font-size: 13px; font-weight: 800; z-index: 5; }
+
+        .card-content { padding: 6px 8px 10px 8px; }
+        .card-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 3px; }
+        .card-price { font-weight: 700; color: var(--main-color); font-size: 15px; line-height: 1; }
+        .old-p { text-decoration: line-through; color: #aaa; font-size: 11px; }
+        .card-title { font-size: 11px; font-weight: 500; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
         #productModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; overflow-y: auto; padding-bottom: 100px; }
         .modal-close-btn { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.8); border-radius: 50%; z-index: 1010; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 
-        .carousel-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+        .carousel-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; overflow: hidden; }
         .carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .carousel img { width: 100%; flex-shrink: 0; scroll-snap-align: start; aspect-ratio: 1/1; object-fit: cover; }
@@ -63,14 +91,18 @@
         .action-btn:hover { transform: scale(1.02); }
         .action-btn:disabled { background: #eee; color: #999; cursor: not-allowed; }
 
-        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 75px; border-top: 1px solid #eee; z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { flex: 1; text-align: center; line-height: 70px; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 60px; border-top: 1px solid #eee; z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
         .nav-item.active { color: var(--main-color); }
-        .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
+        .nav-item.active::after { content: ''; position: absolute; top: calc(50% + 9px); left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
     </style>
 </head>
 <body>
 
+<div id="loading-banner">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Подождите, загружаю товары…</span>
+</div>
 <div id="skeleton-loader" class="grid">
     <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
 </div>
@@ -84,9 +116,11 @@
 
 <div id="successScreen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(252, 252, 252, 0.98); z-index:3000; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card-bg); width:100%; max-width:350px; padding:40px 25px; border-radius:24px; box-shadow:0 15px 35px rgba(0,0,0,0.07); text-align:center;">
-        <img src="assets/logo_op.webp" alt="Moroska" style="max-width: 90px; height: auto; margin: 0 auto 25px auto; display: block; opacity: 0.6;">
-        <h1 style="color:var(--main-color); font-size:24px; margin:0 0 10px 0;">Заказ отправлен!</h1>
-        <p id="orderNumberLabel" style="font-weight:700; font-size:18px; color:var(--text-main); margin-bottom:15px;"></p>
+        <h1 style="color:var(--main-color); font-size:24px; margin:0 0 15px 0;">Заказ отправлен!</h1>
+        <img id="successPhoto" src="assets/logo_op.webp" alt="" style="width:120px; height:120px; object-fit:cover; border-radius:16px; margin:0 auto 20px auto; display:block;">
+        <p id="orderNumberLabel" style="font-weight:700; font-size:18px; color:var(--text-main); margin-bottom:8px;"></p>
+        <p id="successItemName" style="font-size:15px; font-weight:600; color:var(--text-main); margin-bottom:4px;"></p>
+        <p id="successItemPrice" style="font-size:14px; color:var(--main-color); font-weight:700; margin-bottom:15px;"></p>
         <p style="font-size:14px; color:#666; line-height:1.6; margin-bottom:30px;">
             Я уже получила ваш заказ и скоро свяжусь в Telegram для уточнения деталей
         </p>
@@ -126,19 +160,18 @@
     }
 
     function showApp() {
+        document.getElementById('loading-banner').style.display = 'none';
         document.getElementById('skeleton-loader').style.display = 'none';
         document.getElementById('app').style.display = 'grid';
     }
 
     function renderBadges(item, isFab, isBooked, isNew) {
-        // порядок снизу вверх: ЗАБРОНИРОВАНО → НОВОЕ → скидка
-        const list = [];
-        if (isBooked) list.push({ cls: 'booked-badge', text: 'ЗАБРОНИРОВАНО' });
-        if (isNew) list.push({ cls: 'new-badge', text: 'НОВОЕ' });
-        if (item.Скидка && !isFab) list.push({ cls: 'sale-badge', text: esc(item.Скидка) });
-        return list.map((b, i) =>
-            `<div class="${b.cls}" style="position:absolute;bottom:${10 + i * 28}px;right:10px;left:auto;top:auto;">${b.text}</div>`
-        ).join('');
+        const hasSale = !!(item.Скидка && !isFab && !isBooked);
+        const hasNew = !!(isNew && !isBooked);
+        let html = '';
+        if (hasSale) html += `<div class="modal-sale-badge">${esc(item.Скидка)}</div>`;
+        if (hasNew) html += `<div class="modal-new-badge" style="bottom:${hasSale ? 44 : 10}px;">НОВОЕ</div>`;
+        return html;
     }
 
     function render() {
@@ -151,20 +184,24 @@
             const photo = (item.Фото || "").split(',')[0].trim() || 'https://via.placeholder.com/300';
             const oldPrice = item.Старая_цена || item['Старая цена'];
 
+            const hasSale = !!(item.Скидка && !isFab && !isBooked);
+            const hasNew = !!(isNew && !isBooked);
             return `
                 <div class="card" onclick="openProduct(${idx})">
-                    ${item.Скидка && !isFab ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
-                    ${isBooked ? `<div class="booked-badge ${!item.Скидка ? 'booked-only' : ''}">ЗАБРОНИРОВАНО</div>` : ''}
-                    ${isNew ? `<div class="new-badge">НОВОЕ</div>` : ''}
-                    <img src="${photo}" loading="lazy">
+                    <div class="card-img-wrap">
+                        ${isBooked ? `<div class="booked-overlay"><span>БРОНЬ</span></div>` : ''}
+                        ${hasSale ? `<div class="sale-badge">${esc(item.Скидка)}</div>` : ''}
+                        ${hasNew ? `<div class="new-badge" style="bottom:${hasSale ? 30 : 6}px;">НОВОЕ</div>` : ''}
+                        <img src="${photo}" loading="lazy">
+                    </div>
                     <div class="card-content">
-                        <div class="card-title">${esc(item.Название || item.Название_ткани)}</div>
                         ${!isFab ? `
-                            <div class="price-stack">
+                            <div class="card-price-row">
+                                <span class="card-price" style="${isBooked ? 'color:#aaa;' : hasSale ? 'color:var(--sale-color);' : ''}">${esc(item.Цена)} RSD</span>
                                 ${oldPrice ? `<span class="old-p">${esc(oldPrice)}</span>` : ''}
-                                <div class="card-price">${esc(item.Цена)} RSD</div>
                             </div>
                         ` : ''}
+                        <div class="card-title">${esc(item.Название || item.Название_ткани)}</div>
                     </div>
                 </div>`;
         }).join('');
@@ -191,17 +228,17 @@
             </div>
             <div class="modal-body">
                 <h2 style="font-size:18px;margin:0 0 8px 0;">${esc(item.Название || item.Название_ткани)}</h2>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    ${!isFab ? `
-                        <div>
-                            ${(item.Старая_цена || item['Старая цена']) ? `<span style="text-decoration:line-through;color:#aaa;font-size:14px;">${esc(item.Старая_цена || item['Старая цена'])}</span>` : ''}
-                            <div style="color:var(--main-color);font-weight:700;font-size:22px;">${esc(item.Цена)} RSD</div>
-                        </div>
-                        <button class="action-btn" ${isBooked ? 'disabled' : ''} onclick="handleOrder(${idx})">
-                            ${isBooked ? 'ЗАБРОНИРОВАНО' : (currentTab === 'Stock' ? 'КУПИТЬ' : 'ЗАКАЗАТЬ')}
-                        </button>
-                    ` : '<div style="color:#999">Образец ткани</div>'}
-                </div>
+                ${!isFab ? `
+                    ${isBooked
+                        ? `<div style="color:#aaa;font-size:20px;font-weight:700;margin-bottom:12px;">Забронировано</div>`
+                        : `
+                            ${(item.Старая_цена || item['Старая цена']) ? `<div style="color:#aaa;text-decoration:line-through;font-size:13px;margin-bottom:8px;">${esc(item.Старая_цена || item['Старая цена'])} RSD</div>` : ''}
+                            <button class="action-btn" style="width:100%;margin-bottom:10px;" onclick="handleOrder(${idx})">
+                                ${currentTab === 'Stock' ? 'Купить' : 'Заказать'} ${esc(item.Цена)} RSD
+                            </button>
+                        `
+                    }
+                ` : '<div style="color:#999;margin-bottom:10px;">Образец ткани</div>'}
                 <div style="line-height:1.6; color:#666; font-size:14px; white-space:pre-wrap;">${esc(item.Описание || item.Описание_ткани)}</div>
             </div>`;
         document.getElementById('productModal').style.display = 'block';
@@ -231,6 +268,12 @@
             });
             document.getElementById('productModal').style.display = 'none';
             document.getElementById('orderNumberLabel').innerText = "ЗАКАЗ №" + orderID;
+            document.getElementById('successItemName').innerText = item.Название || item.Название_ткани || '';
+            document.getElementById('successItemPrice').innerText = item.Цена ? item.Цена + ' RSD' : '';
+            const firstPhoto = (item.Фото || '').split(',')[0].trim();
+            const photoEl = document.getElementById('successPhoto');
+            if (firstPhoto) { photoEl.src = firstPhoto; photoEl.style.opacity = '1'; }
+            else { photoEl.src = 'assets/logo_op.webp'; photoEl.style.cssText += 'opacity:0.6;width:90px;height:auto;border-radius:0;'; }
             document.getElementById('successScreen').style.display = 'flex';
         } catch(e) { alert("Ошибка сети"); btn.innerText = "КУПИТЬ"; btn.disabled = false; }
     }
