@@ -6,12 +6,12 @@
     <title>Moroska Store</title>
     <link rel="preconnect" href="https://script.google.com">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YNXCMKRYT3"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DSVC5GYQZ4"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-YNXCMKRYT3');
+        gtag('config', 'G-DSVC5GYQZ4');
     </script>
     <style>
         :root { 
@@ -146,7 +146,7 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    const API_URL = "https://script.google.com/macros/s/AKfycbxNgLuITqmqa4hq7wGTSLR1qL28dp1YrMcLAHC4T4Ia6g2E2knc93KcbqkxfuBHtWCoZg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwDo56VtLIZmcw904-JCqEaKjsj4zQwgeZewLDux13wb6swLulHip-Uce9kBexy53WDtA/exec";
     const CACHE_KEY = "moroska_data_v1";
     
     let currentData = {}, currentTab = 'Stock';
@@ -291,7 +291,7 @@
     function getGaClientId() {
         return new Promise(resolve => {
             try {
-                gtag('get', 'G-YNXCMKRYT3', 'client_id', resolve);
+                gtag('get', 'G-DSVC5GYQZ4', 'client_id', resolve);
             } catch(e) {
                 resolve(null);
             }
