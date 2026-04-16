@@ -105,6 +105,7 @@
         .nav-item { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--nav-inactive); font-weight: 700; cursor: pointer; position: relative; }
         .nav-item.active { color: var(--main-color); }
         .nav-item.active::after { content: ''; position: absolute; top: calc(50% + 9px); left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: var(--main-color); border-radius: 3px; }
+        .app-version { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 4px); right: 8px; font-size: 9px; color: #ccc; z-index: 2001; pointer-events: none; letter-spacing: 0.3px; }
     </style>
 </head>
 <body>
@@ -143,6 +144,7 @@
     <div class="nav-item" id="nav-Catalog" onclick="changeTab('Catalog')">Каталог</div>
     <div class="nav-item" id="nav-Fabrics" onclick="changeTab('Fabrics')">Ткани</div>
 </div>
+<div class="app-version">v1.0.0</div>
 
 <script>
     const tg = window.Telegram.WebApp;
