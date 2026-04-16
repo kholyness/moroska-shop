@@ -153,6 +153,8 @@
     let currentModalIdx = null, _lastCarouselIdx = -1, _orderPlacedInModal = false;
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+    tg.BackButton.onClick(() => { closeModal(); tg.BackButton.hide(); });
+
     async function init() {
         tg.ready(); tg.expand();
         let cached = localStorage.getItem(CACHE_KEY);
@@ -235,6 +237,7 @@
     }
 
     function openProduct(idx) {
+        tg.BackButton.show();
         currentModalIdx = idx;
         _lastCarouselIdx = 0;
         _orderPlacedInModal = false;
@@ -430,6 +433,7 @@
             });
         }
         modal.style.display = 'none';
+        tg.BackButton.hide();
         const carousel = document.getElementById('modalCarousel');
         if (carousel) carousel.scrollLeft = 0;
     }
