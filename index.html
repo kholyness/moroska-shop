@@ -150,7 +150,7 @@
     const CACHE_KEY = "moroska_data_v1";
     
     let currentData = {}, currentTab = 'Stock';
-    let currentModalIdx = null, _lastCarouselIdx = -1, _orderPlacedInModal = false;
+    let currentModalIdx = null, _lastCarouselIdx = -1, _orderPlacedInModal = false, isSubmitting = false;
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     tg.BackButton.onClick(() => { closeModal(); tg.BackButton.hide(); });
@@ -302,6 +302,8 @@
     }
 
     async function handleOrder(idx) {
+        if (isSubmitting) return;
+        isSubmitting = true;
         const btn = document.querySelector('#productModal .action-btn');
         btn.innerText = "ОТПРАВКА..."; btn.disabled = true;
 
@@ -375,7 +377,7 @@
             else { photoEl.src = 'assets/logo_op.webp'; photoEl.style.cssText += 'opacity:0.6;width:90px;height:auto;border-radius:0;'; }
             _orderPlacedInModal = true;
             document.getElementById('successScreen').style.display = 'flex';
-        } catch(e) { alert("Ошибка сети"); btn.innerText = currentTab === 'Stock' ? "Купить" : "Заказать"; btn.disabled = false; }
+        } catch(e) { alert("Ошибка сети"); btn.innerText = currentTab === 'Stock' ? "Купить" : "Заказать"; btn.disabled = false; isSubmitting = false; }
     }
 
     function moveSlide(dir) {
